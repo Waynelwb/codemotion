@@ -10,6 +10,7 @@ import '../design/visualization/code_highlight.dart';
 import '../design/visualization/step_indicator.dart';
 import '../models/algorithm_model.dart';
 import '../models/visualization_state.dart';
+import '../app_router.dart';
 
 class VisualizationPage extends StatefulWidget {
   const VisualizationPage({super.key});
@@ -350,9 +351,11 @@ class _VisualizationPageState extends State<VisualizationPage>
   Widget _buildNavLinks(BuildContext context) {
     return Row(
       children: [
-        _navLink('首页', isActive: false, onTap: () => Navigator.of(context).pop()),
+        _navLink('首页', isActive: false,
+            onTap: () => globalNavigator.navigateToHome()),
         const SizedBox(width: 32),
-        _navLink('课程', isActive: false),
+        _navLink('课程', isActive: false,
+            onTap: () => globalNavigator.navigateToCourses()),
         const SizedBox(width: 32),
         _navLink('可视化', isActive: true),
         const SizedBox(width: 32),

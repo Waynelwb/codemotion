@@ -15,13 +15,18 @@ class CodeMotionApp extends StatefulWidget {
 }
 
 class _CodeMotionAppState extends State<CodeMotionApp> {
-  final AppRouterDelegate _routerDelegate = AppRouterDelegate();
+  late final AppRouterDelegate _routerDelegate;
   final AppRouteInformationParser _routeInformationParser =
       AppRouteInformationParser();
 
   @override
+  void initState() {
+    super.initState();
+    _routerDelegate = AppRouterDelegate(AppNavigator.instance);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    setGlobalRouter(_routerDelegate);
     return MaterialApp.router(
       title: 'CodeMotion - C++ 可视化学习',
       debugShowCheckedModeBanner: false,
@@ -118,7 +123,7 @@ class HomePage extends StatelessWidget {
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
           onTap: () {
             Navigator.pop(context);
-            globalRouter.navigateToHome();
+            globalNavigator.navigateToHome();
           },
         ),
         ListTile(
@@ -126,7 +131,7 @@ class HomePage extends StatelessWidget {
           title: const Text('课程', style: TextStyle(color: Colors.white60)),
           onTap: () {
             Navigator.pop(context);
-            globalRouter.navigateToCourses();
+            globalNavigator.navigateToCourses();
           },
         ),
         ListTile(
@@ -134,7 +139,7 @@ class HomePage extends StatelessWidget {
           title: const Text('可视化', style: TextStyle(color: Colors.white60)),
           onTap: () {
             Navigator.pop(context);
-            globalRouter.navigateToVisualize();
+            globalNavigator.navigateToVisualize();
           },
         ),
         ListTile(
@@ -192,18 +197,18 @@ class HomePage extends StatelessWidget {
             Row(
               children: [
                 _navLink('首页', isActive: true,
-                    onTap: () => globalRouter.navigateToHome()),
+                    onTap: () => globalNavigator.navigateToHome()),
                 const SizedBox(width: 32),
                 _navLink('课程',
-                    onTap: () => globalRouter.navigateToCourses()),
+                    onTap: () => globalNavigator.navigateToCourses()),
                 const SizedBox(width: 32),
                 _navLink('可视化',
-                    onTap: () => globalRouter.navigateToVisualize()),
+                    onTap: () => globalNavigator.navigateToVisualize()),
                 const SizedBox(width: 32),
                 _navLink('关于'),
                 const SizedBox(width: 48),
                 ElevatedButton(
-                  onPressed: () => globalRouter.navigateToCourses(),
+                  onPressed: () => globalNavigator.navigateToCourses(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     foregroundColor: Colors.white,
@@ -308,7 +313,7 @@ class HomePage extends StatelessWidget {
             alignment: WrapAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: () => globalRouter.navigateToCourses(),
+                onPressed: () => globalNavigator.navigateToCourses(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,
                   foregroundColor: Colors.white,
@@ -322,7 +327,7 @@ class HomePage extends StatelessWidget {
                     style: TextStyle(fontSize: 16)),
               ),
               OutlinedButton(
-                onPressed: () => globalRouter.navigateToCourses(),
+                onPressed: () => globalNavigator.navigateToCourses(),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Colors.white24),

@@ -1,13 +1,19 @@
-// App Router - Route configuration for CodeMotion
+// App Router - Simple Navigation Shell for CodeMotion
+//
+// 使用 setState + IndexedStack 管理页面切换，稳定可靠。
+// 不依赖 RouterDelegate，避免 Flutter web 上的兼容性问题。
+//
+// 页面切换：通过 Navigator.push/pop 实现（支持过渡动画）
+//
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'design/design_system.dart';
 import 'main.dart' show HomePage;
 import 'pages/course_list_page.dart';
 import 'pages/course_detail_page.dart';
 import 'pages/visualization_page.dart';
 
-/// Route paths
+/// 页面路由名称
 class AppRoutes {
   AppRoutes._();
 
@@ -17,107 +23,53 @@ class AppRoutes {
   static const String visualize = '/visualize';
 }
 
-/// Simple router delegate implementation
-class AppRouterDelegate extends RouterDelegate<String>
-    with ChangeNotifier, PopNavigatorRouterDelegateMixin<String> {
-  @override
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+/// 导航状态管理（单例，全局可访问）
+class AppNavigator extends ChangeNotifier {
+  AppNavigator._();
+  static final AppNavigator instance = AppNavigator._();
 
+  // 当前路由路径
   String _currentPath = AppRoutes.home;
 
+  // course_detail 页面需要传递 courseId
+  String? _currentCourseId;
+
   String get currentPath => _currentPath;
+  String? get currentCourseId => _currentCourseId;
 
-  @override
-  String? get currentConfiguration => _currentPath;
+  bool isAtHome() => _currentPath == AppRoutes.home;
+  bool isAtCourses() => _currentPath == AppRoutes.courses;
+  bool isAtVisualize() => _currentPath == AppRoutes.visualize;
+  bool isAtCourseDetail() => _currentPath == AppRoutes.courseDetail;
 
-  @override
-  Widget build(BuildContext context) {
-    return Navigator(
-      key: navigatorKey,
-      pages: _buildPages(),
-      onDidRemovePage: (page) {
-        if (_currentPath != AppRoutes.home) {
-          _currentPath = AppRoutes.home;
-          notifyListeners();
-        }
-      },
-    );
-  }
-
-  List<Page<dynamic>> _buildPages() {
-    final pages = <Page<dynamic>>[
-      const MaterialPage<void>(
-        key: ValueKey('home'),
-        child: HomePage(),
-      ),
-    ];
-
-    // Course detail page
-    if (_currentPath.startsWith(AppRoutes.courseDetail)) {
-      final uri = Uri.parse(_currentPath);
-      final courseId = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
-      pages.add(
-        _FadeSlidePage<void>(
-          key: ValueKey('course_$courseId'),
-          child: CourseDetailPage(courseId: courseId),
-        ),
-      );
-    } else if (_currentPath == AppRoutes.courses) {
-      pages.add(
-        const _FadeSlidePage<void>(
-          key: ValueKey('courses'),
-          child: CourseListPage(),
-        ),
-      );
-    } else if (_currentPath == AppRoutes.visualize) {
-      pages.add(
-        const _FadeSlidePage<void>(
-          key: ValueKey('visualize'),
-          child: VisualizationPage(),
-        ),
-      );
-    }
-
-    return pages;
-  }
-
-  @override
-  Future<void> setNewRoutePath(String configuration) async {
-    _currentPath = configuration;
-    notifyListeners();
-  }
-
-  void navigateTo(String path, {bool useHeroTransition = false}) {
+  void navigateTo(String path) {
     HapticFeedback.selectionClick();
     _currentPath = path;
+    _currentCourseId = null;
+    if (path.startsWith(AppRoutes.courseDetail)) {
+      // courseId 从 path 中解析：/course/basics_variables
+      final segments = Uri.parse(path).pathSegments;
+      if (segments.length >= 2) {
+        _currentCourseId = segments[1];
+      }
+    }
     notifyListeners();
   }
 
   void navigateToHome() => navigateTo(AppRoutes.home);
-  void navigateToCourses() =>
-      navigateTo(AppRoutes.courses, useHeroTransition: true);
-  void navigateToVisualize() =>
-      navigateTo(AppRoutes.visualize, useHeroTransition: true);
+  void navigateToCourses() => navigateTo(AppRoutes.courses);
+  void navigateToVisualize() => navigateTo(AppRoutes.visualize);
   void navigateToCourseDetail(String courseId) =>
-      navigateTo('${AppRoutes.courseDetail}/$courseId', useHeroTransition: true);
+      navigateTo('${AppRoutes.courseDetail}/$courseId');
 }
 
-/// Global router instance accessor
-AppRouterDelegate get globalRouter {
-  return _globalRouter!;
-}
+/// 全局导航器访问
+AppNavigator get globalNavigator => AppNavigator.instance;
 
-AppRouterDelegate? _globalRouter;
-
-void setGlobalRouter(AppRouterDelegate router) {
-  _globalRouter = router;
-}
-
-/// Route information parser
+/// 路由信息解析器（兼容 MaterialApp.router）
 class AppRouteInformationParser extends RouteInformationParser<String> {
   @override
-  Future<String> parseRouteInformation(
-      RouteInformation routeInformation) async {
+  Future<String> parseRouteInformation(RouteInformation routeInformation) async {
     return routeInformation.uri.path;
   }
 
@@ -127,93 +79,90 @@ class AppRouteInformationParser extends RouteInformationParser<String> {
   }
 }
 
-// ============================================================================
-// Page Transition Utilities
-// ============================================================================
+/// 路由委托（兼容 MaterialApp.router，但核心导航逻辑在 AppNavigator）
+class AppRouterDelegate extends RouterDelegate<String>
+    with ChangeNotifier, PopNavigatorRouterDelegateMixin<String> {
+  @override
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-class PageTransitions {
-  PageTransitions._();
+  final AppNavigator _appNavigator;
 
-  static Widget fadeSlide({
-    required BuildContext context,
-    required Animation<double> animation,
-    required Animation<double> secondaryAnimation,
-    required Widget child,
-  }) {
-    const curve = Curves.easeOutCubic;
-    final curvedAnimation = CurvedAnimation(
-      parent: animation,
-      curve: curve,
-    );
+  AppRouterDelegate(this._appNavigator) {
+    _appNavigator.addListener(_onNavChanged);
+  }
 
-    return FadeTransition(
-      opacity: curvedAnimation,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0.05, 0),
-          end: Offset.zero,
-        ).animate(curvedAnimation),
-        child: child,
-      ),
+  void _onNavChanged() {
+    notifyListeners();
+  }
+
+  @override
+  String? get currentConfiguration => _appNavigator.currentPath;
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      key: navigatorKey,
+      pages: _buildPages(),
+      onDidRemovePage: (page) {
+        _appNavigator.navigateToHome();
+      },
     );
   }
 
-  static Widget scaleFade({
-    required BuildContext context,
-    required Animation<double> animation,
-    required Animation<double> secondaryAnimation,
-    required Widget child,
-  }) {
-    final curvedAnimation = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOutCubic,
-    );
+  List<Page<dynamic>> _buildPages() {
+    final pages = <Page<dynamic>>[
+      const MaterialPage<void>(
+        key: ValueKey('home'),
+        name: '/',
+        child: HomePage(),
+      ),
+    ];
 
-    return FadeTransition(
-      opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: animation,
-          curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+    final path = _appNavigator.currentPath;
+    if (path == AppRoutes.courses) {
+      pages.add(
+        _FadeSlidePage<void>(
+          key: const ValueKey('courses'),
+          name: '/courses',
+          child: const CourseListPage(),
         ),
-      ),
-      child: ScaleTransition(
-        scale: Tween<double>(begin: 0.95, end: 1.0).animate(curvedAnimation),
-        child: child,
-      ),
-    );
+      );
+    } else if (path == AppRoutes.visualize) {
+      pages.add(
+        _FadeSlidePage<void>(
+          key: const ValueKey('visualize'),
+          name: '/visualize',
+          child: const VisualizationPage(),
+        ),
+      );
+    } else if (path.startsWith(AppRoutes.courseDetail) &&
+        _appNavigator.currentCourseId != null) {
+      pages.add(
+        _FadeSlidePage<void>(
+          key: ValueKey('course_${_appNavigator.currentCourseId}'),
+          name: '/course/${_appNavigator.currentCourseId}',
+          child: CourseDetailPage(courseId: _appNavigator.currentCourseId!),
+        ),
+      );
+    }
+
+    return pages;
   }
 
-  static Widget slideUp({
-    required BuildContext context,
-    required Animation<double> animation,
-    required Animation<double> secondaryAnimation,
-    required Widget child,
-  }) {
-    final curvedAnimation = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOutCubic,
-    );
-
-    return SlideTransition(
-      position: Tween<Offset>(
-        begin: const Offset(0, 0.1),
-        end: Offset.zero,
-      ).animate(curvedAnimation),
-      child: FadeTransition(
-        opacity: curvedAnimation,
-        child: child,
-      ),
-    );
+  @override
+  Future<void> setNewRoutePath(String configuration) async {
+    _appNavigator.navigateTo(configuration);
   }
 }
 
-/// Custom page with fade+slide transition
+/// 自定义 Page：淡入+滑动过渡
 class _FadeSlidePage<T> extends Page<T> {
   final Widget child;
 
   const _FadeSlidePage({
     required this.child,
     super.key,
+    super.name,
   });
 
   @override
@@ -222,195 +171,24 @@ class _FadeSlidePage<T> extends Page<T> {
       settings: this,
       pageBuilder: (context, animation, secondaryAnimation) => child,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return PageTransitions.fadeSlide(
-          context: context,
-          animation: animation,
-          secondaryAnimation: secondaryAnimation,
-          child: child,
+        const curve = Curves.easeOutCubic;
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: curve,
+        );
+        return FadeTransition(
+          opacity: curvedAnimation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.05, 0),
+              end: Offset.zero,
+            ).animate(curvedAnimation),
+            child: child,
+          ),
         );
       },
       transitionDuration: const Duration(milliseconds: 300),
       reverseTransitionDuration: const Duration(milliseconds: 250),
-    );
-  }
-}
-
-// ============================================================================
-// Skeleton Loading
-// ============================================================================
-
-class SkeletonLoading extends StatefulWidget {
-  const SkeletonLoading({
-    super.key,
-    required this.width,
-    required this.height,
-    this.borderRadius = 8,
-  });
-
-  final double width;
-  final double height;
-  final double borderRadius;
-
-  @override
-  State<SkeletonLoading> createState() => _SkeletonLoadingState();
-}
-
-class _SkeletonLoadingState extends State<SkeletonLoading>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
-    _animation = Tween<double>(begin: -1.0, end: 2.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Container(
-          width: widget.width,
-          height: widget.height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              stops: [
-                (_animation.value - 0.3).clamp(0.0, 1.0),
-                _animation.value.clamp(0.0, 1.0),
-                (_animation.value + 0.3).clamp(0.0, 1.0),
-              ],
-              colors: const [
-                Color(0xFF1A1A24),
-                Color(0xFF2A2A34),
-                Color(0xFF1A1A24),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ============================================================================
-// Loading Button
-// ============================================================================
-
-class LoadingButton extends StatefulWidget {
-  const LoadingButton({
-    super.key,
-    required this.onPressed,
-    required this.child,
-    this.isLoading = false,
-    this.loadingText,
-  });
-
-  final VoidCallback? onPressed;
-  final Widget child;
-  final bool isLoading;
-  final String? loadingText;
-
-  @override
-  State<LoadingButton> createState() => _LoadingButtonState();
-}
-
-class _LoadingButtonState extends State<LoadingButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _spinnerController;
-
-  @override
-  void initState() {
-    super.initState();
-    _spinnerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat();
-  }
-
-  @override
-  void didUpdateWidget(LoadingButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isLoading && !oldWidget.isLoading) {
-      _spinnerController.repeat();
-    } else if (!widget.isLoading && oldWidget.isLoading) {
-      _spinnerController.stop();
-    }
-  }
-
-  @override
-  void dispose() {
-    _spinnerController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDisabled = widget.onPressed == null || widget.isLoading;
-
-    return GestureDetector(
-      onTap: isDisabled ? null : widget.onPressed,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: isDisabled ? AppColors.surfaceElevated : AppColors.primary,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: isDisabled
-              ? null
-              : [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (widget.isLoading) ...[
-              RotationTransition(
-                turns: _spinnerController,
-                child: const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(Colors.white),
-                  ),
-                ),
-              ),
-              if (widget.loadingText != null) ...[
-                const SizedBox(width: 8),
-                Text(
-                  widget.loadingText!,
-                  style: AppFonts.labelLarge(color: Colors.white),
-                ),
-              ],
-            ] else ...[
-              widget.child,
-            ],
-          ],
-        ),
-      ),
     );
   }
 }

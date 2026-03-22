@@ -108,7 +108,7 @@ class _CourseListPageState extends State<CourseListPage>
                   title: const Text('可视化', style: TextStyle(color: Colors.white60)),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.of(context).pop();
+                    globalNavigator.navigateToVisualize();
                   },
                 ),
                 ListTile(
@@ -210,7 +210,7 @@ class _CourseListPageState extends State<CourseListPage>
   }
 
   void _navigateToVisualize(BuildContext context) {
-    globalRouter.navigateToVisualize();
+    globalNavigator.navigateToVisualize();
   }
 
   Widget _navLink(String text, {bool isActive = false, VoidCallback? onTap}) {
