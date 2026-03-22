@@ -7,6 +7,7 @@ import '../design/animations/fade_slide_transition.dart';
 import '../design/animations/pulse_animation.dart';
 import '../models/course_model.dart';
 import '../design/responsive.dart';
+import 'course_detail_page.dart';
 
 class CourseListPage extends StatefulWidget {
   const CourseListPage({super.key});
@@ -454,7 +455,30 @@ class _CourseListPageState extends State<CourseListPage>
                 progress: course.progress,
                 tags: course.tags,
                 onTap: () {
-                  // TODO: Navigate to course detail
+                  // Navigate to course detail page
+                  Navigator.of(context).push(
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) {
+                        return _CourseDetailPageWrapper(courseId: course.id);
+                      },
+                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.05),
+                              end: Offset.zero,
+                            ).animate(CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            )),
+                            child: child,
+                          ),
+                        );
+                      },
+                      transitionDuration: const Duration(milliseconds: 300),
+                    ),
+                  );
                 },
               ),
             );
@@ -903,5 +927,17 @@ class _TagChip extends StatelessWidget {
         style: AppFonts.labelMedium(color: AppColors.textTertiary),
       ),
     );
+  }
+}
+
+/// Wrapper for CourseDetailPage to handle navigation
+class _CourseDetailPageWrapper extends StatelessWidget {
+  const _CourseDetailPageWrapper({required this.courseId});
+
+  final String courseId;
+
+  @override
+  Widget build(BuildContext context) {
+    return CourseDetailPage(courseId: courseId);
   }
 }

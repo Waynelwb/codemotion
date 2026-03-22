@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'design/design_system.dart';
 import 'main.dart' show HomePage;
 import 'pages/course_list_page.dart';
+import 'pages/course_detail_page.dart';
 import 'pages/visualization_page.dart';
 
 /// Route paths
@@ -12,6 +13,7 @@ class AppRoutes {
 
   static const String home = '/';
   static const String courses = '/courses';
+  static const String courseDetail = '/course';
   static const String visualize = '/visualize';
 }
 
@@ -43,22 +45,40 @@ class AppRouterDelegate extends RouterDelegate<String>
   }
 
   List<Page<dynamic>> _buildPages() {
-    return [
-      MaterialPage<void>(
-        key: const ValueKey('home'),
-        child: const HomePage(),
+    final pages = <Page<dynamic>>[
+      const MaterialPage<void>(
+        key: ValueKey('home'),
+        child: HomePage(),
       ),
-      if (_currentPath == AppRoutes.courses)
-        MaterialPage<void>(
-          key: const ValueKey('courses'),
-          child: const CourseListPage(),
-        ),
-      if (_currentPath == AppRoutes.visualize)
-        MaterialPage<void>(
-          key: const ValueKey('visualize'),
-          child: const VisualizationPage(),
-        ),
     ];
+
+    // Course detail page
+    if (_currentPath.startsWith(AppRoutes.courseDetail)) {
+      final uri = Uri.parse(_currentPath);
+      final courseId = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
+      pages.add(
+        _FadeSlidePage<void>(
+          key: ValueKey('course_$courseId'),
+          child: CourseDetailPage(courseId: courseId),
+        ),
+      );
+    } else if (_currentPath == AppRoutes.courses) {
+      pages.add(
+        const _FadeSlidePage<void>(
+          key: ValueKey('courses'),
+          child: CourseListPage(),
+        ),
+      );
+    } else if (_currentPath == AppRoutes.visualize) {
+      pages.add(
+        const _FadeSlidePage<void>(
+          key: ValueKey('visualize'),
+          child: VisualizationPage(),
+        ),
+      );
+    }
+
+    return pages;
   }
 
   @override
@@ -78,6 +98,8 @@ class AppRouterDelegate extends RouterDelegate<String>
       navigateTo(AppRoutes.courses, useHeroTransition: true);
   void navigateToVisualize() =>
       navigateTo(AppRoutes.visualize, useHeroTransition: true);
+  void navigateToCourseDetail(String courseId) =>
+      navigateTo('${AppRoutes.courseDetail}/$courseId', useHeroTransition: true);
 }
 
 /// Global router instance accessor
