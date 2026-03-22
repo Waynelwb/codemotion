@@ -1,4 +1,4 @@
-// App Router - Route configuration for CodeMotion with Hero animation support
+// App Router - Route configuration for CodeMotion
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'design/design_system.dart';
@@ -34,7 +34,6 @@ class AppRouterDelegate extends RouterDelegate<String>
       key: navigatorKey,
       pages: _buildPages(),
       onDidRemovePage: (page) {
-        // Handle back navigation
         if (_currentPath != AppRoutes.home) {
           _currentPath = AppRoutes.home;
           notifyListeners();
@@ -45,18 +44,15 @@ class AppRouterDelegate extends RouterDelegate<String>
 
   List<Page<dynamic>> _buildPages() {
     return [
-      // Home page with default transition
       MaterialPage<void>(
         key: const ValueKey('home'),
         child: const HomePage(),
       ),
-      // Course list page with fade transition
       if (_currentPath == AppRoutes.courses)
         MaterialPage<void>(
           key: const ValueKey('courses'),
           child: const CourseListPage(),
         ),
-      // Visualization page with fade transition
       if (_currentPath == AppRoutes.visualize)
         MaterialPage<void>(
           key: const ValueKey('visualize'),
@@ -72,15 +68,16 @@ class AppRouterDelegate extends RouterDelegate<String>
   }
 
   void navigateTo(String path, {bool useHeroTransition = false}) {
-    // Add haptic feedback for navigation
     HapticFeedback.selectionClick();
     _currentPath = path;
     notifyListeners();
   }
 
   void navigateToHome() => navigateTo(AppRoutes.home);
-  void navigateToCourses() => navigateTo(AppRoutes.courses, useHeroTransition: true);
-  void navigateToVisualize() => navigateTo(AppRoutes.visualize, useHeroTransition: true);
+  void navigateToCourses() =>
+      navigateTo(AppRoutes.courses, useHeroTransition: true);
+  void navigateToVisualize() =>
+      navigateTo(AppRoutes.visualize, useHeroTransition: true);
 }
 
 /// Global router instance accessor
@@ -97,7 +94,8 @@ void setGlobalRouter(AppRouterDelegate router) {
 /// Route information parser
 class AppRouteInformationParser extends RouteInformationParser<String> {
   @override
-  Future<String> parseRouteInformation(RouteInformation routeInformation) async {
+  Future<String> parseRouteInformation(
+      RouteInformation routeInformation) async {
     return routeInformation.uri.path;
   }
 
@@ -107,11 +105,13 @@ class AppRouteInformationParser extends RouteInformationParser<String> {
   }
 }
 
-/// Page transition builder utilities
+// ============================================================================
+// Page Transition Utilities
+// ============================================================================
+
 class PageTransitions {
   PageTransitions._();
 
-  /// Default fade slide transition
   static Widget fadeSlide({
     required BuildContext context,
     required Animation<double> animation,
@@ -136,7 +136,6 @@ class PageTransitions {
     );
   }
 
-  /// Scale and fade transition for hero-like effects
   static Widget scaleFade({
     required BuildContext context,
     required Animation<double> animation,
@@ -162,7 +161,6 @@ class PageTransitions {
     );
   }
 
-  /// Slide up transition for modals
   static Widget slideUp({
     required BuildContext context,
     required Animation<double> animation,
@@ -187,7 +185,10 @@ class PageTransitions {
   }
 }
 
-/// Skeleton loading widget for async content
+// ============================================================================
+// Skeleton Loading
+// ============================================================================
+
 class SkeletonLoading extends StatefulWidget {
   const SkeletonLoading({
     super.key,
@@ -258,7 +259,10 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
   }
 }
 
-/// Loading button with spinner
+// ============================================================================
+// Loading Button
+// ============================================================================
+
 class LoadingButton extends StatefulWidget {
   const LoadingButton({
     super.key,
@@ -316,9 +320,7 @@ class _LoadingButtonState extends State<LoadingButton>
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: isDisabled
-              ? AppColors.surfaceElevated
-              : AppColors.primary,
+          color: isDisabled ? AppColors.surfaceElevated : AppColors.primary,
           borderRadius: BorderRadius.circular(8),
           boxShadow: isDisabled
               ? null

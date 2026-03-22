@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_router.dart';
+import 'design/responsive.dart';
 
 void main() {
   runApp(const CodeMotionApp());
@@ -38,49 +39,119 @@ class _CodeMotionAppState extends State<CodeMotionApp> {
   }
 }
 
+// ============================================================================
+// HomePage - Landing Page with responsive design
+// ============================================================================
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+    final hp = Responsive.horizontalPadding(context);
+    final vp = Responsive.verticalPadding(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0F),
+      endDrawer: Responsive.isMobile(context)
+          ? _buildMobileDrawer(context, colorScheme)
+          : null,
       body: CustomScrollView(
         slivers: [
-          // 导航栏
           SliverToBoxAdapter(
-            child: _buildNavBar(context, colorScheme),
+            child: _buildNavBar(context, colorScheme, hp),
           ),
-          
-          // Hero 区域
           SliverToBoxAdapter(
-            child: _buildHero(context, colorScheme),
+            child: _buildHero(context, colorScheme, hp, vp),
           ),
-          
-          // 特性介绍
           SliverToBoxAdapter(
-            child: _buildFeatures(context, colorScheme),
+            child: _buildFeatures(context, colorScheme, hp, vp),
           ),
-          
-          // 学习路径
           SliverToBoxAdapter(
-            child: _buildLearningPath(context, colorScheme),
+            child: _buildLearningPath(context, colorScheme, hp, vp),
           ),
-          
-          // 页脚
           SliverToBoxAdapter(
-            child: _buildFooter(context, colorScheme),
+            child: _buildFooter(context, colorScheme, hp),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNavBar(BuildContext context, ColorScheme colorScheme) {
+  Drawer _buildMobileDrawer(BuildContext context, ColorScheme colorScheme) {
+    return Drawer(
+      backgroundColor: const Color(0xFF12121A),
+      child: ListView(padding: EdgeInsets.zero, children: [
+        DrawerHeader(
+          decoration: const BoxDecoration(color: Color(0xFF0A0A0F)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [colorScheme.primary, colorScheme.tertiary],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.code, color: Colors.white, size: 24),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'CodeMotion',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.home, color: Colors.white),
+          title: const Text('首页',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+          onTap: () {
+            Navigator.pop(context);
+            globalRouter.navigateToHome();
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.school_outlined, color: Colors.white60),
+          title: const Text('课程', style: TextStyle(color: Colors.white60)),
+          onTap: () {
+            Navigator.pop(context);
+            globalRouter.navigateToCourses();
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.play_circle_outline, color: Colors.white60),
+          title: const Text('可视化', style: TextStyle(color: Colors.white60)),
+          onTap: () {
+            Navigator.pop(context);
+            globalRouter.navigateToVisualize();
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.info_outline, color: Colors.white60),
+          title: const Text('关于', style: TextStyle(color: Colors.white60)),
+          onTap: () => Navigator.pop(context),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildNavBar(
+      BuildContext context, ColorScheme colorScheme, double hp) {
+    final isMobile = Responsive.isMobile(context);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
+      padding: EdgeInsets.symmetric(horizontal: hp, vertical: isMobile ? 16 : 24),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -109,32 +180,43 @@ class HomePage extends StatelessWidget {
               ),
             ],
           ),
-          
-          // 导航链接
-          Row(
-            children: [
-              _navLink('首页', isActive: true, onTap: () => globalRouter.navigateToHome()),
-              const SizedBox(width: 32),
-              _navLink('课程', onTap: () => globalRouter.navigateToCourses()),
-              const SizedBox(width: 32),
-              _navLink('可视化', onTap: () => globalRouter.navigateToVisualize()),
-              const SizedBox(width: 32),
-              _navLink('关于'),
-              const SizedBox(width: 48),
-              ElevatedButton(
-                onPressed: () => globalRouter.navigateToCourses(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('开始学习'),
+
+          if (isMobile)
+            Builder(
+              builder: (ctx) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white70),
+                onPressed: () => Scaffold.of(ctx).openEndDrawer(),
               ),
-            ],
-          ),
+            )
+          else
+            Row(
+              children: [
+                _navLink('首页', isActive: true,
+                    onTap: () => globalRouter.navigateToHome()),
+                const SizedBox(width: 32),
+                _navLink('课程',
+                    onTap: () => globalRouter.navigateToCourses()),
+                const SizedBox(width: 32),
+                _navLink('可视化',
+                    onTap: () => globalRouter.navigateToVisualize()),
+                const SizedBox(width: 32),
+                _navLink('关于'),
+                const SizedBox(width: 48),
+                ElevatedButton(
+                  onPressed: () => globalRouter.navigateToCourses(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('开始学习'),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -157,9 +239,13 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHero(BuildContext context, ColorScheme colorScheme) {
+  Widget _buildHero(
+      BuildContext context, ColorScheme colorScheme, double hp, double vp) {
+    final titleSize = Responsive.heroTitleSize(context);
+    final isMobile = Responsive.isMobile(context);
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 80),
+      padding: EdgeInsets.symmetric(vertical: vp, horizontal: hp),
       child: Column(
         children: [
           // 标签
@@ -187,103 +273,121 @@ class HomePage extends StatelessWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
-          // 主标题
+
           Text(
             '优雅地掌握\nC++ 编程之美',
             textAlign: TextAlign.center,
             style: GoogleFonts.spaceGrotesk(
-              fontSize: 72,
+              fontSize: titleSize,
               fontWeight: FontWeight.bold,
               color: Colors.white,
               height: 1.1,
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
-          // 副标题
+
           Text(
             '通过交互式可视化演示，直观理解算法原理\n从基础语法到高级特性，循序渐进地提升你的编程能力',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: isMobile ? 15 : 18,
               color: Colors.white.withValues(alpha: 0.6),
               height: 1.6,
             ),
           ),
-          
+
           const SizedBox(height: 48),
-          
-          // 按钮组
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+
+          // 按钮组（响应式换行）
+          Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () => globalRouter.navigateToCourses(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 32, vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text('立即开始学习', style: TextStyle(fontSize: 16)),
+                child: const Text('立即开始学习',
+                    style: TextStyle(fontSize: 16)),
               ),
-              const SizedBox(width: 16),
               OutlinedButton(
-                onPressed: () {},
+                onPressed: () => globalRouter.navigateToCourses(),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Colors.white24),
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 32, vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text('查看课程大纲', style: TextStyle(fontSize: 16)),
+                child: const Text('查看课程大纲',
+                    style: TextStyle(fontSize: 16)),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 80),
-          
-          // 代码预览卡片
-          Container(
-            width: 700,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFF16161D),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white12),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: 0.1),
-                  blurRadius: 40,
-                  offset: const Offset(0, 20),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(width: 12, height: 12, decoration: const BoxDecoration(color: Color(0xFFFF5F57), shape: BoxShape.circle)),
-                    const SizedBox(width: 8),
-                    Container(width: 12, height: 12, decoration: const BoxDecoration(color: Color(0xFFFFBD2E), shape: BoxShape.circle)),
-                    const SizedBox(width: 8),
-                    Container(width: 12, height: 12, decoration: const BoxDecoration(color: Color(0xFF28CA41), shape: BoxShape.circle)),
-                    const Spacer(),
-                    Text('main.cpp', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13)),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _buildCodeBlock(),
-              ],
+
+          // 代码预览卡片（响应式宽度）
+          Center(
+            child: Container(
+              constraints: BoxConstraints(maxWidth: isMobile ? 360 : 700),
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF16161D),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white12),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withValues(alpha: 0.1),
+                    blurRadius: 40,
+                    offset: const Offset(0, 20),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(width: 12, height: 12,
+                          decoration: const BoxDecoration(
+                              color: Color(0xFFFF5F57),
+                              shape: BoxShape.circle)),
+                      const SizedBox(width: 8),
+                      Container(width: 12, height: 12,
+                          decoration: const BoxDecoration(
+                              color: Color(0xFFFFBD2E),
+                              shape: BoxShape.circle)),
+                      const SizedBox(width: 8),
+                      Container(width: 12, height: 12,
+                          decoration: const BoxDecoration(
+                              color: Color(0xFF28CA41),
+                              shape: BoxShape.circle)),
+                      const Spacer(),
+                      Text('main.cpp',
+                          style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 13)),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildCodeBlock(),
+                ],
+              ),
             ),
           ),
         ],
@@ -321,22 +425,28 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatures(BuildContext context, ColorScheme colorScheme) {
+  Widget _buildFeatures(
+      BuildContext context, ColorScheme colorScheme, double hp, double vp) {
+    final titleSize = Responsive.sectionTitleSize(context);
     final features = [
-      {'icon': Icons.school_outlined, 'title': '系统化课程', 'desc': '从零基础到进阶，循序渐进的学习路径'},
-      {'icon': Icons.play_circle_outline, 'title': '可视化演示', 'desc': '动态展示算法执行过程，直观理解原理'},
-      {'icon': Icons.code, 'title': '交互式代码', 'desc': '边学边练，在线编写和运行代码'},
-      {'icon': Icons.psychology_outlined, 'title': '思维提升', 'desc': '培养编程思维和解决问题的能力'},
+      {'icon': Icons.school_outlined, 'title': '系统化课程',
+          'desc': '从零基础到进阶，循序渐进的学习路径'},
+      {'icon': Icons.play_circle_outline, 'title': '可视化演示',
+          'desc': '动态展示算法执行过程，直观理解原理'},
+      {'icon': Icons.code, 'title': '交互式代码',
+          'desc': '边学边练，在线编写和运行代码'},
+      {'icon': Icons.psychology_outlined, 'title': '思维提升',
+          'desc': '培养编程思维和解决问题的能力'},
     ];
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 48),
+      padding: EdgeInsets.symmetric(vertical: vp, horizontal: hp),
       child: Column(
         children: [
           Text(
             '为什么选择 CodeMotion？',
             style: GoogleFonts.spaceGrotesk(
-              fontSize: 36,
+              fontSize: titleSize,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -344,22 +454,49 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             '我们为你提供最优质的学习体验',
-            style: TextStyle(fontSize: 18, color: Colors.white.withValues(alpha: 0.6)),
+            style: TextStyle(
+                fontSize: Responsive.isMobile(context) ? 15 : 18,
+                color: Colors.white.withValues(alpha: 0.6)),
           ),
           const SizedBox(height: 48),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: features.map((f) => _buildFeatureCard(context, colorScheme, f)).toList(),
-          ),
+          _buildFeatureGrid(context, colorScheme, features),
         ],
       ),
     );
   }
 
-  Widget _buildFeatureCard(BuildContext context, ColorScheme colorScheme, Map<String, dynamic> feature) {
+  Widget _buildFeatureGrid(BuildContext context, ColorScheme colorScheme,
+      List<Map<String, dynamic>> features) {
+    final cols = Responsive.gridCrossAxisCount(context, desktopCols: 4);
+
+    if (cols == 1) {
+      return Column(
+        children: features
+            .map((f) =>
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildFeatureCard(context, colorScheme, f),
+            ))
+            .toList(),
+      );
+    }
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: features.map((f) {
+        final cardWidth = Responsive.featureCardWidth(context);
+        return SizedBox(
+          width: cardWidth,
+          child: _buildFeatureCard(context, colorScheme, f),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildFeatureCard(BuildContext context, ColorScheme colorScheme,
+      Map<String, dynamic> feature) {
     return Container(
-      width: 280,
-      margin: const EdgeInsets.symmetric(horizontal: 12),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: const Color(0xFF12121A),
@@ -375,7 +512,8 @@ class HomePage extends StatelessWidget {
               color: colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(feature['icon'], color: colorScheme.primary, size: 28),
+            child: Icon(feature['icon'],
+                color: colorScheme.primary, size: 28),
           ),
           const SizedBox(height: 20),
           Text(
@@ -400,22 +538,28 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLearningPath(BuildContext context, ColorScheme colorScheme) {
+  Widget _buildLearningPath(
+      BuildContext context, ColorScheme colorScheme, double hp, double vp) {
+    final titleSize = Responsive.sectionTitleSize(context);
     final stages = [
-      {'num': '01', 'title': '基础语法', 'desc': '变量、数据类型、控制流', 'color': const Color(0xFF6366F1)},
-      {'num': '02', 'title': '面向对象', 'desc': '类、对象、继承、多态', 'color': const Color(0xFFEC4899)},
-      {'num': '03', 'title': 'STL 容器', 'desc': 'vector、map、set、算法', 'color': const Color(0xFF14B8A6)},
-      {'num': '04', 'title': '算法进阶', 'desc': '排序、查找、动态规划', 'color': const Color(0xFFF59E0B)},
+      {'num': '01', 'title': '基础语法', 'desc': '变量、数据类型、控制流',
+          'color': const Color(0xFF6366F1)},
+      {'num': '02', 'title': '面向对象', 'desc': '类、对象、继承、多态',
+          'color': const Color(0xFFEC4899)},
+      {'num': '03', 'title': 'STL 容器', 'desc': 'vector、map、set、算法',
+          'color': const Color(0xFF14B8A6)},
+      {'num': '04', 'title': '算法进阶', 'desc': '排序、查找、动态规划',
+          'color': const Color(0xFFF59E0B)},
     ];
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 48),
+      padding: EdgeInsets.symmetric(vertical: vp, horizontal: hp),
       child: Column(
         children: [
           Text(
             '学习路径',
             style: GoogleFonts.spaceGrotesk(
-              fontSize: 36,
+              fontSize: titleSize,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -423,76 +567,97 @@ class HomePage extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             '四个阶段，全面掌握 C++',
-            style: TextStyle(fontSize: 18, color: Colors.white.withValues(alpha: 0.6)),
+            style: TextStyle(
+                fontSize: Responsive.isMobile(context) ? 15 : 18,
+                color: Colors.white.withValues(alpha: 0.6)),
           ),
           const SizedBox(height: 48),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: stages.asMap().entries.map((entry) {
-              final index = entry.key;
-              final stage = entry.value;
-              return _buildPathStage(context, stage, index, stages.length);
-            }).toList(),
+          _buildPathGrid(context, stages),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPathGrid(
+      BuildContext context, List<Map<String, dynamic>> stages) {
+    final isMobile = Responsive.isMobile(context);
+
+    if (isMobile) {
+      return Column(
+        children: stages.asMap().entries.map((entry) {
+          final index = entry.key;
+          final stage = entry.value;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _buildPathStage(context, stage, index, stages.length),
+          );
+        }).toList(),
+      );
+    }
+
+    final cardWidth = Responsive.pathCardWidth(context);
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: stages.asMap().entries.map((entry) {
+        final index = entry.key;
+        final stage = entry.value;
+        return SizedBox(
+          width: cardWidth,
+          child: _buildPathStage(context, stage, index, stages.length),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildPathStage(BuildContext context,
+      Map<String, dynamic> stage, int index, int total) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF12121A),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: (stage['color'] as Color).withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            stage['num'],
+            style: TextStyle(
+              fontSize: 48,
+              fontWeight: FontWeight.bold,
+              color: stage['color'],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            stage['title'],
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            stage['desc'],
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.5),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPathStage(BuildContext context, Map<String, dynamic> stage, int index, int total) {
-    return Row(
-      children: [
-        Container(
-          width: 200,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFF12121A),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: (stage['color'] as Color).withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                stage['num'],
-                style: TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  color: stage['color'],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                stage['title'],
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                stage['desc'],
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (index < total - 1)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Icon(Icons.arrow_forward, color: Colors.white.withValues(alpha: 0.2), size: 24),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildFooter(BuildContext context, ColorScheme colorScheme) {
+  Widget _buildFooter(
+      BuildContext context, ColorScheme colorScheme, double hp) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 48),
+      padding: EdgeInsets.symmetric(vertical: 48, horizontal: hp),
       child: Column(
         children: [
           Row(

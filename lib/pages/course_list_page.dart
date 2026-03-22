@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design/design_system.dart';
-import '../design/components/course_card.dart';
 import '../design/animations/fade_slide_transition.dart';
 import '../design/animations/pulse_animation.dart';
 import '../models/course_model.dart';
+import '../design/responsive.dart';
 
 class CourseListPage extends StatefulWidget {
   const CourseListPage({super.key});
@@ -20,7 +20,6 @@ class _CourseListPageState extends State<CourseListPage>
   final ScrollController _scrollController = ScrollController();
   int _selectedCategoryIndex = 0;
 
-  // Tab indicator animation
   late AnimationController _tabIndicatorController;
 
   @override
@@ -52,23 +51,87 @@ class _CourseListPageState extends State<CourseListPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final hp = Responsive.horizontalPadding(context);
+    final isMobile = Responsive.isMobile(context);
+
     return Scaffold(
       backgroundColor: AppColors.background,
+      endDrawer: isMobile
+          ? Drawer(
+              backgroundColor: const Color(0xFF12121A),
+              child: ListView(padding: EdgeInsets.zero, children: [
+                DrawerHeader(
+                  decoration: const BoxDecoration(color: Color(0xFF0A0A0F)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.code, color: Colors.white, size: 24),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'CodeMotion',
+                        style: GoogleFonts.spaceGrotesk(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.home_outlined, color: Colors.white60),
+                  title: const Text('首页', style: TextStyle(color: Colors.white60)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.school, color: Color(0xFF6366F1)),
+                  title: const Text('课程',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                  onTap: () => Navigator.pop(context),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.play_circle_outline, color: Colors.white60),
+                  title: const Text('可视化', style: TextStyle(color: Colors.white60)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.info_outline, color: Colors.white60),
+                  title: const Text('关于', style: TextStyle(color: Colors.white60)),
+                  onTap: () => Navigator.pop(context),
+                ),
+              ]),
+            )
+          : null,
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          _buildAppBar(context),
+          _buildAppBar(context, hp),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 32),
+              padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(),
+                  _buildHeader(context),
                   const SizedBox(height: 48),
-                  _buildCategoryTabs(),
+                  _buildCategoryTabs(context),
                   const SizedBox(height: 32),
-                  _buildCurrentCategorySection(),
+                  _buildCurrentCategorySection(context),
                   const SizedBox(height: 64),
                 ],
               ),
@@ -79,15 +142,25 @@ class _CourseListPageState extends State<CourseListPage>
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
+  Widget _buildAppBar(BuildContext context, double hp) {
+    final isMobile = Responsive.isMobile(context);
+
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
+        padding: EdgeInsets.symmetric(horizontal: hp, vertical: isMobile ? 16 : 24),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildLogo(),
-            _buildNavLinks(context),
+            if (isMobile)
+              Builder(
+                builder: (ctx) => IconButton(
+                  icon: const Icon(Icons.menu, color: Colors.white70),
+                  onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+                ),
+              )
+            else
+              _buildNavLinks(context),
           ],
         ),
       ),
@@ -126,11 +199,16 @@ class _CourseListPageState extends State<CourseListPage>
         const SizedBox(width: 32),
         _navLink('课程', isActive: true),
         const SizedBox(width: 32),
-        _navLink('可视化', isActive: false, onTap: () {}),
+        _navLink('可视化', isActive: false,
+            onTap: () => _navigateToVisualize(context)),
         const SizedBox(width: 32),
         _navLink('关于', isActive: false),
       ],
     );
+  }
+
+  void _navigateToVisualize(BuildContext context) {
+    Navigator.of(context).pop();
   }
 
   Widget _navLink(String text, {bool isActive = false, VoidCallback? onTap}) {
@@ -147,7 +225,7 @@ class _CourseListPageState extends State<CourseListPage>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return FadeSlideTransition(
       direction: SlideDirection.bottomToTop,
       duration: const Duration(milliseconds: 500),
@@ -157,7 +235,7 @@ class _CourseListPageState extends State<CourseListPage>
           Text(
             '课程目录',
             style: GoogleFonts.spaceGrotesk(
-              fontSize: 40,
+              fontSize: Responsive.sectionTitleSize(context),
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -166,7 +244,7 @@ class _CourseListPageState extends State<CourseListPage>
           Text(
             '从基础语法到高级算法，系统化学习 C++ 编程',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: Responsive.isMobile(context) ? 15 : 18,
               color: Colors.white.withValues(alpha: 0.6),
             ),
           ),
@@ -175,7 +253,7 @@ class _CourseListPageState extends State<CourseListPage>
     );
   }
 
-  Widget _buildCategoryTabs() {
+  Widget _buildCategoryTabs(BuildContext context) {
     final categories = [
       (CourseCategory.basics, _getBasicsCourses()),
       (CourseCategory.oop, _getOopCourses()),
@@ -238,17 +316,18 @@ class _CourseListPageState extends State<CourseListPage>
                               Icon(
                                 category.icon,
                                 size: 18,
-                                color: isSelected
-                                    ? Colors.white
-                                    : AppColors.textSecondary,
+                                color: isSelected ? Colors.white : AppColors.textSecondary,
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                category.label,
-                                style: AppFonts.labelLarge(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : AppColors.textSecondary,
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    category.label,
+                                    style: AppFonts.labelLarge(
+                                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -266,7 +345,7 @@ class _CourseListPageState extends State<CourseListPage>
     );
   }
 
-  Widget _buildCurrentCategorySection() {
+  Widget _buildCurrentCategorySection(BuildContext context) {
     final categories = [
       (CourseCategory.basics, _getBasicsCourses()),
       (CourseCategory.oop, _getOopCourses()),
@@ -291,7 +370,7 @@ class _CourseListPageState extends State<CourseListPage>
         children: [
           _buildCategoryHeader(category),
           const SizedBox(height: 20),
-          _buildCourseGrid(courses),
+          _buildCourseGrid(context, courses),
         ],
       ),
     );
@@ -328,34 +407,58 @@ class _CourseListPageState extends State<CourseListPage>
     );
   }
 
-  Widget _buildCourseGrid(List<CourseOverviewModel> courses) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 400,
-        mainAxisExtent: 200,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-      ),
-      itemCount: courses.length,
-      itemBuilder: (context, index) {
-        final course = courses[index];
-        return FadeSlideTransition(
-          direction: SlideDirection.bottomToTop,
-          duration: const Duration(milliseconds: 400),
-          delay: Duration(milliseconds: 100 * index),
-          child: _AnimatedCourseCard(
-            title: course.title,
-            description: course.description,
-            difficulty: _toDifficultyLevel(course.difficulty),
-            icon: course.icon,
-            progress: course.progress,
-            tags: course.tags,
-            onTap: () {
-              // Hero animation ready for detail page
-            },
+  Widget _buildCourseGrid(BuildContext context, List<CourseOverviewModel> courses) {
+    final isMobile = Responsive.isMobile(context);
+    final hp = Responsive.horizontalPadding(context);
+    final availableWidth = MediaQuery.of(context).size.width - hp * 2;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Responsive cross axis count
+        int crossAxisCount;
+        double childAspectRatio;
+
+        if (isMobile) {
+          crossAxisCount = 1;
+          childAspectRatio = availableWidth / 180;
+        } else if (Responsive.isTablet(context)) {
+          crossAxisCount = 2;
+          childAspectRatio = (availableWidth - 20) / 2 / 180;
+        } else {
+          crossAxisCount = (availableWidth / 380).floor().clamp(2, 4);
+          childAspectRatio = (availableWidth - 20 * (crossAxisCount - 1)) /
+              (crossAxisCount * 180);
+        }
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 20,
+            mainAxisSpacing: 20,
+            childAspectRatio: childAspectRatio.clamp(1.5, 3.0),
           ),
+          itemCount: courses.length,
+          itemBuilder: (context, index) {
+            final course = courses[index];
+            return FadeSlideTransition(
+              direction: SlideDirection.bottomToTop,
+              duration: const Duration(milliseconds: 400),
+              delay: Duration(milliseconds: 100 * index),
+              child: _AnimatedCourseCard(
+                title: course.title,
+                description: course.description,
+                difficulty: _toDifficultyLevel(course.difficulty),
+                icon: course.icon,
+                progress: course.progress,
+                tags: course.tags,
+                onTap: () {
+                  // TODO: Navigate to course detail
+                },
+              ),
+            );
+          },
         );
       },
     );
@@ -546,6 +649,17 @@ class _CourseListPageState extends State<CourseListPage>
   }
 }
 
+/// Difficulty level enum used by course card
+enum DifficultyLevel {
+  beginner('入门', AppColors.success),
+  intermediate('进阶', AppColors.warning),
+  advanced('高级', AppColors.error);
+
+  const DifficultyLevel(this.label, this.color);
+  final String label;
+  final Color color;
+}
+
 /// Animated course card with hover/click effects
 class _AnimatedCourseCard extends StatefulWidget {
   const _AnimatedCourseCard({
@@ -592,12 +706,15 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOutCubic,
-          transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : (_isPressed ? 2.0 : 0.0), 0.0),
+          transform: Matrix4.translationValues(
+              0.0, _isHovered ? -4.0 : (_isPressed ? 2.0 : 0.0), 0.0),
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: _isHovered ? AppColors.primary.withValues(alpha: 0.5) : AppColors.border,
+              color: _isHovered
+                  ? AppColors.primary.withValues(alpha: 0.5)
+                  : AppColors.border,
               width: _isHovered ? 1.5 : 1,
             ),
             boxShadow: [
@@ -620,7 +737,7 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
                 children: [
                   _buildHeader(),
                   const SizedBox(height: 16),
-                  _buildContent(),
+                  Expanded(child: _buildContent()),
                   if (widget.progress != null) ...[
                     const SizedBox(height: 16),
                     _buildProgress(),
@@ -676,11 +793,13 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
-        Text(
-          widget.description,
-          style: AppFonts.bodyMedium(color: AppColors.textSecondary),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        Expanded(
+          child: Text(
+            widget.description,
+              style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
