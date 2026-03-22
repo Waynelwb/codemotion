@@ -94,7 +94,7 @@ class _CourseListPageState extends State<CourseListPage>
                   title: const Text('首页', style: TextStyle(color: Colors.white60)),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.of(context).pop();
+                    globalNavigator.navigateToHome();
                   },
                 ),
                 ListTile(
@@ -197,7 +197,8 @@ class _CourseListPageState extends State<CourseListPage>
   Widget _buildNavLinks(BuildContext context) {
     return Row(
       children: [
-        _navLink('首页', isActive: false, onTap: () => Navigator.of(context).pop()),
+        _navLink('首页', isActive: false,
+            onTap: () => globalNavigator.navigateToHome()),
         const SizedBox(width: 32),
         _navLink('课程', isActive: true),
         const SizedBox(width: 32),
