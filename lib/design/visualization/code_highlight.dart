@@ -41,12 +41,13 @@ class CodeHighlight extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (showLineNumbers) ...[
                 _LineNumbers(lines: lines, highlightedLine: highlightedLine),
                 const SizedBox(width: AppSpacing.md),
               ],
-              Expanded(
+              Flexible(
                 child: _CodeLines(
                   lines: lines,
                   highlightedLine: highlightedLine,

@@ -760,10 +760,11 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildHeader(),
                   const SizedBox(height: 16),
-                  Expanded(child: _buildContent()),
+                  Flexible(child: _buildContent()),
                   if (widget.progress != null) ...[
                     const SizedBox(height: 16),
                     _buildProgress(),
