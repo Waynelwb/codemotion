@@ -128,26 +128,31 @@ class ArrayBarChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: AppDecorations.codeBlock(),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: List.generate(values.length, (index) {
-          return Padding(
-            padding: EdgeInsets.only(
-              left: index == 0 ? 0 : 4,
-              right: index == values.length - 1 ? 0 : 4,
-            ),
-            child: ArrayBar(
-              value: values[index],
-              maxValue: effectiveMaxValue,
-              state: effectiveStates[index],
-              label: '${values[index]}',
-              width: barWidth,
-              showLabel: showLabels,
-              animationDuration: animationDuration,
-            ),
-          );
-        }),
+      width: double.infinity,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: List.generate(values.length, (index) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: index == 0 ? 0 : 4,
+                right: index == values.length - 1 ? 0 : 4,
+              ),
+              child: ArrayBar(
+                value: values[index],
+                maxValue: effectiveMaxValue,
+                state: effectiveStates[index],
+                label: '${values[index]}',
+                width: barWidth,
+                showLabel: showLabels,
+                animationDuration: animationDuration,
+              ),
+            );
+          }),
+        ),
       ),
     );
   }
