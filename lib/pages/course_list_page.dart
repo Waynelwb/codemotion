@@ -8,6 +8,7 @@ import '../design/animations/pulse_animation.dart';
 import '../models/course_model.dart';
 import '../design/responsive.dart';
 import 'course_detail_page.dart';
+import '../app_router.dart';
 
 class CourseListPage extends StatefulWidget {
   const CourseListPage({super.key});
@@ -209,7 +210,7 @@ class _CourseListPageState extends State<CourseListPage>
   }
 
   void _navigateToVisualize(BuildContext context) {
-    Navigator.of(context).pop();
+    globalRouter.navigateToVisualize();
   }
 
   Widget _navLink(String text, {bool isActive = false, VoidCallback? onTap}) {
@@ -605,23 +606,33 @@ class _CourseListPageState extends State<CourseListPage>
   List<CourseOverviewModel> _getStlCourses() {
     return const [
       CourseOverviewModel(
-        id: 'stl_containers',
-        title: 'STL 容器',
-        description: '学习 vector、list、deque、map、set 等常用容器的使用。',
+        id: 'stl_vectors',
+        title: 'Vector 容器',
+        description: '学习 vector 的创建、访问、修改和常用操作。',
         difficulty: CourseDifficulty.intermediate,
         category: CourseCategory.stl,
         icon: Icons.science,
-        tags: ['vector', 'map', 'set'],
-        lessonCount: 4,
+        tags: ['vector', '容器', '动态数组'],
+        lessonCount: 2,
       ),
       CourseOverviewModel(
-        id: 'stl_iterators',
-        title: '迭代器',
-        description: '理解迭代器概念，使用迭代器遍历和操作容器。',
+        id: 'stl_maps',
+        title: 'Map 容器',
+        description: '学习 map 和 unordered_map 键值对容器的使用。',
         difficulty: CourseDifficulty.intermediate,
         category: CourseCategory.stl,
-        icon: Icons.sync,
-        tags: ['迭代器', '遍历', '算法'],
+        icon: Icons.map,
+        tags: ['map', 'unordered_map', '键值对'],
+        lessonCount: 2,
+      ),
+      CourseOverviewModel(
+        id: 'stl_sets',
+        title: 'Set 容器',
+        description: '学习 set 和 unordered_set 无重复元素集合的操作。',
+        difficulty: CourseDifficulty.intermediate,
+        category: CourseCategory.stl,
+        icon: Icons.folder_special,
+        tags: ['set', '集合', '去重'],
         lessonCount: 2,
       ),
       CourseOverviewModel(
@@ -640,7 +651,7 @@ class _CourseListPageState extends State<CourseListPage>
   List<CourseOverviewModel> _getAlgorithmCourses() {
     return const [
       CourseOverviewModel(
-        id: 'algo_sorting',
+        id: 'algorithms_sorting',
         title: '排序算法',
         description: '冒泡、选择、插入、归并、快速排序的原理与实现。',
         difficulty: CourseDifficulty.intermediate,
@@ -650,7 +661,7 @@ class _CourseListPageState extends State<CourseListPage>
         lessonCount: 5,
       ),
       CourseOverviewModel(
-        id: 'algo_searching',
+        id: 'algorithms_searching',
         title: '查找算法',
         description: '顺序查找、二分查找、哈希查找的原理与适用场景。',
         difficulty: CourseDifficulty.beginner,
@@ -658,16 +669,6 @@ class _CourseListPageState extends State<CourseListPage>
         icon: Icons.search,
         tags: ['二分查找', '哈希'],
         lessonCount: 3,
-      ),
-      CourseOverviewModel(
-        id: 'algo_dp',
-        title: '动态规划',
-        description: '理解最优子结构和重叠子问题，掌握 DP 解题套路。',
-        difficulty: CourseDifficulty.advanced,
-        category: CourseCategory.algorithms,
-        icon: Icons.psychology,
-        tags: ['最优子结构', '状态转移', '记忆化'],
-        lessonCount: 4,
       ),
     ];
   }
