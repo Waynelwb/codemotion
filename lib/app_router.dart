@@ -207,6 +207,34 @@ class PageTransitions {
   }
 }
 
+/// Custom page with fade+slide transition
+class _FadeSlidePage<T> extends Page<T> {
+  final Widget child;
+
+  const _FadeSlidePage({
+    required this.child,
+    super.key,
+  });
+
+  @override
+  Route<T> createRoute(BuildContext context) {
+    return PageRouteBuilder<T>(
+      settings: this,
+      pageBuilder: (context, animation, secondaryAnimation) => child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return PageTransitions.fadeSlide(
+          context: context,
+          animation: animation,
+          secondaryAnimation: secondaryAnimation,
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 250),
+    );
+  }
+}
+
 // ============================================================================
 // Skeleton Loading
 // ============================================================================

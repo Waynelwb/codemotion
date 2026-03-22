@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design/design_system.dart';
+import '../design/responsive.dart';
 import '../design/visualization/array_bar.dart';
 import '../design/visualization/visualization_controls.dart';
 import '../design/visualization/code_highlight.dart';
@@ -270,6 +271,8 @@ class _VisualizationPageState extends State<VisualizationPage>
   @override
   Widget build(BuildContext context) {
     final state = _notifier.state;
+    final hp = Responsive.horizontalPadding(context);
+    final vp = Responsive.verticalPadding(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -278,20 +281,20 @@ class _VisualizationPageState extends State<VisualizationPage>
           _buildAppBar(context),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
+              padding: EdgeInsets.symmetric(horizontal: hp, vertical: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildAlgorithmSelector(),
-                  const SizedBox(height: 32),
+                  SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
                   _buildVisualizationArea(state),
-                  const SizedBox(height: 32),
+                  SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
                   _buildControls(state),
-                  const SizedBox(height: 32),
+                  SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
                   _buildCodePanel(state),
-                  const SizedBox(height: 32),
+                  SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
                   _buildStepInfo(state),
-                  const SizedBox(height: 64),
+                  SizedBox(height: Responsive.isMobile(context) ? 40 : 64),
                 ],
               ),
             ),
@@ -302,14 +305,17 @@ class _VisualizationPageState extends State<VisualizationPage>
   }
 
   Widget _buildAppBar(BuildContext context) {
+    final hp = Responsive.horizontalPadding(context);
+    final isMobile = Responsive.isMobile(context);
+
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
+        padding: EdgeInsets.symmetric(horizontal: hp, vertical: isMobile ? 16 : 24),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildLogo(),
-            _buildNavLinks(context),
+            if (!isMobile) _buildNavLinks(context),
           ],
         ),
       ),
@@ -370,8 +376,11 @@ class _VisualizationPageState extends State<VisualizationPage>
   }
 
   Widget _buildAlgorithmSelector() {
+    final isMobile = Responsive.isMobile(context);
+    final padding = isMobile ? 16.0 : 24.0;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(padding),
       decoration: AppDecorations.card(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,19 +389,19 @@ class _VisualizationPageState extends State<VisualizationPage>
             '选择排序算法',
             style: AppFonts.titleMedium(color: Colors.white),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isMobile ? 12 : 16),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: isMobile ? 8 : 12,
+            runSpacing: isMobile ? 8 : 12,
             children: SortingAlgorithm.values.map((algo) {
               final isSelected = algo == _selectedAlgorithm;
               return GestureDetector(
                 onTap: () => _onAlgorithmChanged(algo),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 12 : 16,
+                    vertical: isMobile ? 8 : 10,
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
@@ -430,7 +439,7 @@ class _VisualizationPageState extends State<VisualizationPage>
               );
             }).toList(),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isMobile ? 12 : 16),
           Text(
             _selectedAlgorithm.description,
             style: AppFonts.bodyMedium(color: AppColors.textSecondary),
@@ -441,62 +450,114 @@ class _VisualizationPageState extends State<VisualizationPage>
   }
 
   Widget _buildVisualizationArea(VisualizationState state) {
+    final isMobile = Responsive.isMobile(context);
+    final padding = isMobile ? 16.0 : 32.0;
+    final chartHeight = isMobile ? 200.0 : 280.0;
+    final barWidth = isMobile ? 28.0 : 44.0;
+
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.all(padding),
       decoration: AppDecorations.card(),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '可视化演示',
-                style: AppFonts.titleMedium(color: Colors.white),
-              ),
-              Row(
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _showCustomArrayDialog,
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('自定义数组'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textSecondary,
-                      side: const BorderSide(color: AppColors.border),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
+          if (isMobile)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '可视化演示',
+                  style: AppFonts.titleMedium(color: Colors.white),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _showCustomArrayDialog,
+                        icon: const Icon(Icons.edit, size: 14),
+                        label: const Text('自定义'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          side: const BorderSide(color: AppColors.border),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: _onShuffleArray,
-                    icon: const Icon(Icons.shuffle, size: 16),
-                    label: const Text('重新随机'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.surfaceElevated,
-                      foregroundColor: AppColors.textSecondary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _onShuffleArray,
+                        icon: const Icon(Icons.shuffle, size: 14),
+                        label: const Text('随机'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.surfaceElevated,
+                          foregroundColor: AppColors.textSecondary,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
+                  ],
+                ),
+              ],
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '可视化演示',
+                  style: AppFonts.titleMedium(color: Colors.white),
+                ),
+                Row(
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _showCustomArrayDialog,
+                      icon: const Icon(Icons.edit, size: 16),
+                      label: const Text('自定义数组'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        side: const BorderSide(color: AppColors.border),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: _onShuffleArray,
+                      icon: const Icon(Icons.shuffle, size: 16),
+                      label: const Text('重新随机'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.surfaceElevated,
+                        foregroundColor: AppColors.textSecondary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          SizedBox(height: isMobile ? 16 : 32),
           SizedBox(
-            height: 280,
+            height: chartHeight,
             child: ArrayBarChart(
               values: state.currentArray,
               states: state.barStates,
-              barWidth: 44,
+              barWidth: barWidth,
               showLabels: true,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isMobile ? 12 : 16),
           _buildLegend(),
         ],
       ),
@@ -541,15 +602,18 @@ class _VisualizationPageState extends State<VisualizationPage>
   }
 
   Widget _buildControls(VisualizationState state) {
+    final isMobile = Responsive.isMobile(context);
+    final padding = isMobile ? 16.0 : 20.0;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(padding),
       decoration: AppDecorations.card(),
       child: Column(
         children: [
           // Speed display
           if (state.isPlaying)
             Padding(
-              padding: const EdgeInsets.only(bottom: 16),
+              padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -589,7 +653,7 @@ class _VisualizationPageState extends State<VisualizationPage>
           ),
           // Speed slider (only when not playing)
           if (!state.isPlaying) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: isMobile ? 12 : 16),
             _buildSpeedSlider(state),
           ],
         ],
@@ -646,13 +710,17 @@ class _VisualizationPageState extends State<VisualizationPage>
   }
 
   Widget _buildCodePanel(VisualizationState state) {
+    final isMobile = Responsive.isMobile(context);
+    final padding = isMobile ? 12.0 : 16.0;
+    final fontSize = isMobile ? 11.0 : 13.0;
+
     return Container(
       decoration: AppDecorations.card(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(padding),
             child: Row(
               children: [
                 const Icon(Icons.code, color: AppColors.primary, size: 18),
@@ -665,13 +733,16 @@ class _VisualizationPageState extends State<VisualizationPage>
             ),
           ),
           const Divider(color: AppColors.border, height: 1),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: CodeHighlight(
-              code: _getAlgorithmCode(_selectedAlgorithm),
-              highlightedLine: state.currentStep?.codeLine,
-              showLineNumbers: true,
-              fontSize: 13,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Padding(
+              padding: EdgeInsets.all(padding),
+              child: CodeHighlight(
+                code: _getAlgorithmCode(_selectedAlgorithm),
+                highlightedLine: state.currentStep?.codeLine,
+                showLineNumbers: true,
+                fontSize: fontSize,
+              ),
             ),
           ),
         ],
@@ -681,8 +752,11 @@ class _VisualizationPageState extends State<VisualizationPage>
 
   Widget _buildStepInfo(VisualizationState state) {
     final step = state.currentStep;
+    final isMobile = Responsive.isMobile(context);
+    final padding = isMobile ? 12.0 : 16.0;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(padding),
       decoration: AppDecorations.card(),
       child: Column(
         children: [
@@ -692,31 +766,32 @@ class _VisualizationPageState extends State<VisualizationPage>
             labelFormat: StepLabelFormat.fraction,
           ),
           if (step != null) ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getStepTypeColor(step.type).withValues(alpha: 0.15),
-                    borderRadius: AppRadius.borderXs,
-                    border: Border.all(
-                      color: _getStepTypeColor(step.type).withValues(alpha: 0.3),
+            SizedBox(height: isMobile ? 12 : 16),
+            if (isMobile)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getStepTypeColor(step.type).withValues(alpha: 0.15),
+                      borderRadius: AppRadius.borderXs,
+                      border: Border.all(
+                        color: _getStepTypeColor(step.type).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      step.type.label,
+                      style: AppFonts.labelMedium(
+                        color: _getStepTypeColor(step.type),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    step.type.label,
-                    style: AppFonts.labelMedium(
-                      color: _getStepTypeColor(step.type),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: AnimatedBuilder(
+                  const SizedBox(height: 8),
+                  AnimatedBuilder(
                     animation: _stepDescFadeAnimation,
                     builder: (context, child) {
                       return FadeTransition(
@@ -728,9 +803,47 @@ class _VisualizationPageState extends State<VisualizationPage>
                       );
                     },
                   ),
-                ),
-              ],
-            ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getStepTypeColor(step.type).withValues(alpha: 0.15),
+                      borderRadius: AppRadius.borderXs,
+                      border: Border.all(
+                        color: _getStepTypeColor(step.type).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      step.type.label,
+                      style: AppFonts.labelMedium(
+                        color: _getStepTypeColor(step.type),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: AnimatedBuilder(
+                      animation: _stepDescFadeAnimation,
+                      builder: (context, child) {
+                        return FadeTransition(
+                          opacity: _stepDescFadeAnimation,
+                          child: Text(
+                            step.description,
+                            style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
           ],
         ],
       ),

@@ -496,45 +496,9 @@ class HomePage extends StatelessWidget {
 
   Widget _buildFeatureCard(BuildContext context, ColorScheme colorScheme,
       Map<String, dynamic> feature) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF12121A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(feature['icon'],
-                color: colorScheme.primary, size: 28),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            feature['title'],
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            feature['desc'],
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
-          ),
-        ],
-      ),
+    return AnimatedFeatureCard(
+      colorScheme: colorScheme,
+      feature: feature,
     );
   }
 
@@ -613,45 +577,7 @@ class HomePage extends StatelessWidget {
 
   Widget _buildPathStage(BuildContext context,
       Map<String, dynamic> stage, int index, int total) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF12121A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: (stage['color'] as Color).withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            stage['num'],
-            style: TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-              color: stage['color'],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            stage['title'],
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            stage['desc'],
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
-          ),
-        ],
-      ),
-    );
+    return AnimatedPathStage(stage: stage);
   }
 
   Widget _buildFooter(
@@ -691,6 +617,198 @@ class HomePage extends StatelessWidget {
             style: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Animated Feature Card with hover effects
+// ============================================================================
+class AnimatedFeatureCard extends StatefulWidget {
+  const AnimatedFeatureCard({
+    super.key,
+    required this.colorScheme,
+    required this.feature,
+  });
+
+  final ColorScheme colorScheme;
+  final Map<String, dynamic> feature;
+
+  @override
+  State<AnimatedFeatureCard> createState() => _AnimatedFeatureCardState();
+}
+
+class _AnimatedFeatureCardState extends State<AnimatedFeatureCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = widget.colorScheme;
+    final feature = widget.feature;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {},
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFF12121A),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _isHovered
+                  ? colorScheme.primary.withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.05),
+              width: _isHovered ? 1.5 : 1,
+            ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: colorScheme.primary.withValues(alpha: 0.15),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ]
+                : null,
+          ),
+          transform: _isHovered
+              ? (Matrix4.translationValues(0.0, -4.0, 0.0))
+              : Matrix4.identity(),
+          child: Column(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: _isHovered
+                      ? colorScheme.primary.withValues(alpha: 0.25)
+                      : colorScheme.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(feature['icon'],
+                    color: colorScheme.primary, size: 28),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                feature['title'],
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: _isHovered
+                      ? Colors.white.withValues(alpha: 0.8)
+                      : Colors.white.withValues(alpha: 0.5),
+                ),
+                child: Text(
+                  feature['desc'],
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Animated Path Stage with hover effects
+// ============================================================================
+class AnimatedPathStage extends StatefulWidget {
+  const AnimatedPathStage({super.key, required this.stage});
+
+  final Map<String, dynamic> stage;
+
+  @override
+  State<AnimatedPathStage> createState() => _AnimatedPathStageState();
+}
+
+class _AnimatedPathStageState extends State<AnimatedPathStage> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final stage = widget.stage;
+    final stageColor = stage['color'] as Color;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: const Color(0xFF12121A),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _isHovered
+                ? stageColor.withValues(alpha: 0.7)
+                : stageColor.withValues(alpha: 0.3),
+            width: _isHovered ? 2 : 1,
+          ),
+          boxShadow: _isHovered
+              ? [
+                  BoxShadow(
+                    color: stageColor.withValues(alpha: 0.2),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
+                  ),
+                ]
+              : null,
+        ),
+        transform: _isHovered
+            ? (Matrix4.translationValues(0.0, -4.0, 0.0))
+            : Matrix4.identity(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontSize: _isHovered ? 52 : 48,
+                fontWeight: FontWeight.bold,
+                color: stageColor,
+              ),
+              child: Text(stage['num']),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              stage['title'],
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontSize: 14,
+                color: _isHovered
+                    ? Colors.white.withValues(alpha: 0.8)
+                    : Colors.white.withValues(alpha: 0.5),
+              ),
+              child: Text(stage['desc']),
+            ),
+          ],
+        ),
       ),
     );
   }

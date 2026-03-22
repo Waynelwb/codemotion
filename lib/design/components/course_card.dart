@@ -26,7 +26,7 @@ enum DifficultyLevel {
   final Color color;
 }
 
-class CourseCard extends StatelessWidget {
+class CourseCard extends StatefulWidget {
   const CourseCard({
     super.key,
     required this.title,
@@ -47,16 +47,46 @@ class CourseCard extends StatelessWidget {
   final List<String> tags;
 
   @override
+  State<CourseCard> createState() => _CourseCardState();
+}
+
+class _CourseCardState extends State<CourseCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: MouseRegion(
-        cursor: onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
-        child: Container(
+        cursor: widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
           constraints: const BoxConstraints(minHeight: 160),
-          decoration: AppDecorations.card(
-            glowColor: AppColors.primary,
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(
+              color: _isHovered
+                  ? AppColors.primary.withValues(alpha: 0.5)
+                  : AppColors.border,
+              width: _isHovered ? 1.5 : 1,
+            ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ]
+                : AppShadows.card(),
           ),
+          transform: _isHovered
+              ? (Matrix4.translationValues(0.0, -4.0, 0.0))
+              : Matrix4.identity(),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -65,11 +95,11 @@ class CourseCard extends StatelessWidget {
                 _buildHeader(),
                 const SizedBox(height: AppSpacing.md),
                 _buildContent(),
-                if (progress != null) ...[
+                if (widget.progress != null) ...[
                   const SizedBox(height: AppSpacing.md),
                   _buildProgress(),
                 ],
-                if (tags.isNotEmpty) ...[
+                if (widget.tags.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.sm),
                   _buildTags(),
                 ],
@@ -91,11 +121,11 @@ class CourseCard extends StatelessWidget {
             color: AppColors.primary.withValues(alpha: 0.15),
             borderRadius: AppRadius.borderMd,
           ),
-          child: Icon(icon, color: AppColors.primary, size: 24),
+          child: Icon(widget.icon, color: AppColors.primary, size: 24),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: _DifficultyBadge(difficulty: difficulty),
+          child: _DifficultyBadge(difficulty: widget.difficulty),
         ),
       ],
     );
@@ -106,14 +136,14 @@ class CourseCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          widget.title,
           style: AppFonts.titleMedium(),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: AppSpacing.xxs),
         Text(
-          description,
+          widget.description,
           style: AppFonts.bodyMedium(color: AppColors.textSecondary),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -134,7 +164,7 @@ class CourseCard extends StatelessWidget {
               style: AppFonts.labelMedium(color: AppColors.textTertiary),
             ),
             Text(
-              '${(progress! * 100).toInt()}%',
+              '${(widget.progress! * 100).toInt()}%',
               style: AppFonts.labelMedium(color: AppColors.primary),
             ),
           ],
@@ -143,7 +173,7 @@ class CourseCard extends StatelessWidget {
         ClipRRect(
           borderRadius: AppRadius.borderXs,
           child: LinearProgressIndicator(
-            value: progress,
+            value: widget.progress,
             backgroundColor: AppColors.border,
             valueColor: const AlwaysStoppedAnimation(AppColors.primary),
             minHeight: 4,
@@ -157,7 +187,7 @@ class CourseCard extends StatelessWidget {
     return Wrap(
       spacing: AppSpacing.xxs,
       runSpacing: AppSpacing.xxs,
-      children: tags.map((tag) => _TagChip(label: tag)).toList(),
+      children: widget.tags.map((tag) => _TagChip(label: tag)).toList(),
     );
   }
 }
