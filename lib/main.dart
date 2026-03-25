@@ -195,30 +195,31 @@ class HomePage extends StatelessWidget {
             )
           else
             Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                _navLink('首页', isActive: true,
-                    onTap: () => globalNavigator.navigateToHome()),
-                const SizedBox(width: 32),
-                _navLink('课程',
-                    onTap: () => globalNavigator.navigateToCourses()),
-                const SizedBox(width: 32),
-                _navLink('可视化',
-                    onTap: () => globalNavigator.navigateToVisualize()),
-                const SizedBox(width: 32),
-                _navLink('关于'),
-                const SizedBox(width: 48),
-                ElevatedButton(
-                  onPressed: () => globalNavigator.navigateToCourses(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                Flexible(child: _navLink('首页', isActive: true,
+                    onTap: () => globalNavigator.navigateToHome())),
+                Flexible(child: _navLink('课程',
+                    onTap: () => globalNavigator.navigateToCourses())),
+                Flexible(child: _navLink('可视化',
+                    onTap: () => globalNavigator.navigateToVisualize())),
+                Flexible(child: _navLink('关于')),
+                const SizedBox(width: 24),
+                Flexible(
+                  child: ElevatedButton(
+                    onPressed: () => globalNavigator.navigateToCourses(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
+                    child: const Text('开始学习', overflow: TextOverflow.ellipsis),
                   ),
-                  child: const Text('开始学习'),
                 ),
               ],
             ),
@@ -472,31 +473,50 @@ class HomePage extends StatelessWidget {
 
   Widget _buildFeatureGrid(BuildContext context, ColorScheme colorScheme,
       List<Map<String, dynamic>> features) {
-    final cols = Responsive.gridCrossAxisCount(context, desktopCols: 4);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final hp = Responsive.horizontalPadding(context);
+    final availableWidth = screenWidth - hp * 2;
 
-    if (cols == 1) {
-      return Column(
-        children: features
-            .map((f) =>
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _buildFeatureCard(context, colorScheme, f),
-            ))
-            .toList(),
+    // Responsive breakpoints: < 600px → 1 col, 600-900px → 2 cols, > 900px → 4 cols
+    int cardsPerRow;
+    if (screenWidth < 600) {
+      cardsPerRow = 1;
+    } else if (screenWidth < 900) {
+      cardsPerRow = 2;
+    } else {
+      cardsPerRow = 4;
+    }
+
+    final spacing = 16.0;
+    final totalSpacing = spacing * (cardsPerRow - 1);
+    final cardWidth = (availableWidth - totalSpacing) / cardsPerRow;
+
+    // Build rows of cards
+    final rows = <Widget>[];
+    for (int i = 0; i < features.length; i += cardsPerRow) {
+      final rowCards = features.skip(i).take(cardsPerRow).toList();
+      rows.add(
+        Padding(
+          padding: EdgeInsets.only(bottom: i + cardsPerRow < features.length ? spacing : 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: rowCards.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final f = entry.value;
+              return SizedBox(
+                width: cardWidth,
+                child: Padding(
+                  padding: EdgeInsets.only(right: idx < rowCards.length - 1 ? spacing : 0),
+                  child: _buildFeatureCard(context, colorScheme, f),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       );
     }
 
-    return Wrap(
-      spacing: 16,
-      runSpacing: 16,
-      children: features.map((f) {
-        final cardWidth = Responsive.featureCardWidth(context);
-        return SizedBox(
-          width: cardWidth,
-          child: _buildFeatureCard(context, colorScheme, f),
-        );
-      }).toList(),
-    );
+    return Column(children: rows);
   }
 
   Widget _buildFeatureCard(BuildContext context, ColorScheme colorScheme,
@@ -549,35 +569,50 @@ class HomePage extends StatelessWidget {
 
   Widget _buildPathGrid(
       BuildContext context, List<Map<String, dynamic>> stages) {
-    final isMobile = Responsive.isMobile(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final hp = Responsive.horizontalPadding(context);
+    final availableWidth = screenWidth - hp * 2;
 
-    if (isMobile) {
-      return Column(
-        children: stages.asMap().entries.map((entry) {
-          final index = entry.key;
-          final stage = entry.value;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: _buildPathStage(context, stage, index, stages.length),
-          );
-        }).toList(),
+    // Responsive breakpoints: < 600px → 1 col, 600-900px → 2 cols, > 900px → 4 cols
+    int cardsPerRow;
+    if (screenWidth < 600) {
+      cardsPerRow = 1;
+    } else if (screenWidth < 900) {
+      cardsPerRow = 2;
+    } else {
+      cardsPerRow = 4;
+    }
+
+    final spacing = 16.0;
+    final totalSpacing = spacing * (cardsPerRow - 1);
+    final cardWidth = (availableWidth - totalSpacing) / cardsPerRow;
+
+    // Build rows of cards
+    final rows = <Widget>[];
+    for (int i = 0; i < stages.length; i += cardsPerRow) {
+      final rowStages = stages.skip(i).take(cardsPerRow).toList();
+      rows.add(
+        Padding(
+          padding: EdgeInsets.only(bottom: i + cardsPerRow < stages.length ? spacing : 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: rowStages.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final stage = entry.value;
+              return SizedBox(
+                width: cardWidth,
+                child: Padding(
+                  padding: EdgeInsets.only(right: idx < rowStages.length - 1 ? spacing : 0),
+                  child: _buildPathStage(context, stage, idx, rowStages.length),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       );
     }
 
-    final cardWidth = Responsive.pathCardWidth(context);
-
-    return Wrap(
-      spacing: 16,
-      runSpacing: 16,
-      children: stages.asMap().entries.map((entry) {
-        final index = entry.key;
-        final stage = entry.value;
-        return SizedBox(
-          width: cardWidth,
-          child: _buildPathStage(context, stage, index, stages.length),
-        );
-      }).toList(),
-    );
+    return Column(children: rows);
   }
 
   Widget _buildPathStage(BuildContext context,
@@ -661,6 +696,10 @@ class _AnimatedFeatureCardState extends State<AnimatedFeatureCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
+          height: 200,
+          clipBehavior: Clip.hardEdge,
+          transform: Matrix4.identity()..translate(0.0, _isHovered ? -4.0 : 0.0),
+          transformAlignment: Alignment.center,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: const Color(0xFF12121A),
@@ -681,10 +720,9 @@ class _AnimatedFeatureCardState extends State<AnimatedFeatureCard> {
                   ]
                 : null,
           ),
-          transform: _isHovered
-              ? (Matrix4.translationValues(0.0, -4.0, 0.0))
-              : Matrix4.identity(),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
@@ -699,20 +737,20 @@ class _AnimatedFeatureCardState extends State<AnimatedFeatureCard> {
                 child: Icon(feature['icon'],
                     color: colorScheme.primary, size: 28),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               Text(
                 feature['title'],
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: _isHovered
                       ? Colors.white.withValues(alpha: 0.8)
                       : Colors.white.withValues(alpha: 0.5),
@@ -720,6 +758,8 @@ class _AnimatedFeatureCardState extends State<AnimatedFeatureCard> {
                 child: Text(
                   feature['desc'],
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -757,6 +797,10 @@ class _AnimatedPathStageState extends State<AnimatedPathStage> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
+        height: 200,
+        clipBehavior: Clip.hardEdge,
+        transform: Matrix4.identity()..translate(0.0, _isHovered ? -4.0 : 0.0),
+        transformAlignment: Alignment.center,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: const Color(0xFF12121A),
@@ -777,40 +821,45 @@ class _AnimatedPathStageState extends State<AnimatedPathStage> {
                 ]
               : null,
         ),
-        transform: _isHovered
-            ? (Matrix4.translationValues(0.0, -4.0, 0.0))
-            : Matrix4.identity(),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
-                fontSize: _isHovered ? 52 : 48,
+                fontSize: 36,
                 fontWeight: FontWeight.bold,
-                color: stageColor,
+                color: _isHovered
+                    ? stageColor.withValues(alpha: 1.0)
+                    : stageColor.withValues(alpha: 0.7),
               ),
               child: Text(stage['num']),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(
               stage['title'],
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 color: _isHovered
                     ? Colors.white.withValues(alpha: 0.8)
                     : Colors.white.withValues(alpha: 0.5),
               ),
-              child: Text(stage['desc']),
+              child: Text(
+                stage['desc'],
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
