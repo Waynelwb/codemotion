@@ -990,111 +990,141 @@ class _LessonCardState extends State<_LessonCard>
 }
 
 /// Code example card with syntax highlighting
-class _CodeExampleCard extends StatelessWidget {
+class _CodeExampleCard extends StatefulWidget {
   const _CodeExampleCard({required this.example});
 
   final CodeExample example;
 
   @override
+  State<_CodeExampleCard> createState() => _CodeExampleCardState();
+}
+
+class _CodeExampleCardState extends State<_CodeExampleCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    _slideAnimation = Tween<double>(begin: 12.0, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.codeBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceElevated,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.code, color: AppColors.primary, size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    example.title,
-                    style: AppFonts.labelLarge(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _fadeAnimation.value,
+          child: Transform.translate(
+            offset: Offset(0, _slideAnimation.value),
+            child: child,
           ),
-          // Code block
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: CodeHighlight(
-              code: example.code,
-              language: 'cpp',
-              showLineNumbers: true,
-              fontSize: 13,
-            ),
-          ),
-          // Description and output
-          if (example.description.isNotEmpty || example.output != null) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.codeBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceElevated,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              ),
+              child: Row(
                 children: [
-                  if (example.description.isNotEmpty) ...[
-                    Text(
-                      example.description,
-                      style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+                  Icon(Icons.code, color: AppColors.primary, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      widget.example.title,
+                      style: AppFonts.labelLarge(color: Colors.white),
                     ),
-                    const SizedBox(height: 12),
-                  ],
-                  if (example.output != null) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceElevated,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.terminal, color: AppColors.textTertiary, size: 14),
-                              const SizedBox(width: 6),
-                              Text(
-                                '输出结果',
-                                style: AppFonts.labelMedium(color: AppColors.textTertiary),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            example.output!,
-                            style: GoogleFonts.firaCode(
-                              fontSize: 12,
-                              color: AppColors.success,
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ],
               ),
             ),
+            // Code block
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: CodeHighlight(
+                code: widget.example.code,
+                language: 'cpp',
+                showLineNumbers: true,
+                fontSize: 13,
+              ),
+            ),
+            // Description and output
+            if (widget.example.description.isNotEmpty || widget.example.output != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (widget.example.description.isNotEmpty) ...[
+                      Text(
+                        widget.example.description,
+                        style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (widget.example.output != null)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceElevated,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.terminal, color: AppColors.textTertiary, size: 14),
+                                const SizedBox(width: 6),
+                                Text('输出结果', style: AppFonts.labelMedium(color: AppColors.textTertiary)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(widget.example.output!, style: AppFonts.codeSmall(color: AppColors.textSecondary)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
           ],
-        ],
+        ),
       ),
     );
   }
 }
-
-/// Exercise card - similar to CodeExampleCard but with orange/warning accent
 class _ExerciseCard extends StatelessWidget {
   const _ExerciseCard({required this.example});
 

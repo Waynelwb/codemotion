@@ -455,21 +455,26 @@ class _CourseListPageState extends State<CourseListPage>
                         );
                       },
                       transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        final curved = CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutQuart,
+                        );
                         return FadeTransition(
-                          opacity: animation,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.05),
-                              end: Offset.zero,
-                            ).animate(CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            )),
-                            child: child,
+                          opacity: curved,
+                          child: ScaleTransition(
+                            scale: Tween<double>(begin: 0.95, end: 1.0).animate(curved),
+                            alignment: Alignment.topCenter,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.05),
+                                end: Offset.zero,
+                              ).animate(curved),
+                              child: child,
+                            ),
                           ),
                         );
                       },
-                      transitionDuration: const Duration(milliseconds: 300),
+                      transitionDuration: const Duration(milliseconds: 350),
                     ),
                   );
                 },
