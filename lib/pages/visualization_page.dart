@@ -1,16 +1,187 @@
-// Visualization Page - Sorting Algorithm Visualization Demo with enhanced UI
+// Visualization Page - Sorting and Searching Algorithm Visualization
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design/design_system.dart';
 import '../design/responsive.dart';
 import '../design/visualization/array_bar.dart';
+import '../design/visualization/search_bar.dart';
 import '../design/visualization/visualization_controls.dart';
 import '../design/visualization/code_highlight.dart';
 import '../design/visualization/step_indicator.dart';
 import '../models/algorithm_model.dart';
 import '../models/visualization_state.dart';
+import '../content/algorithms/searching.dart';
 import '../app_router.dart';
+
+/// Visualization mode enum
+enum VisualizationMode {
+  sorting('排序算法'),
+  searching('查找算法');
+
+  const VisualizationMode(this.label);
+  final String label;
+}
+
+/// Search visualization state
+class SearchVisualizationState {
+  final SearchAlgorithm? algorithm;
+  final List<int> originalArray;
+  final List<int> currentArray;
+  final List<SearchBarState> barStates;
+  final List<SearchStep> steps;
+  final int currentStepIndex;
+  final double speed;
+  final SearchStep? currentStep;
+  final int? target;
+
+  const SearchVisualizationState({
+    this.algorithm,
+    this.originalArray = const [],
+    this.currentArray = const [],
+    this.barStates = const [],
+    this.steps = const [],
+    this.currentStepIndex = 0,
+    this.speed = 1.0,
+    this.currentStep,
+    this.target,
+  });
+
+  int get totalSteps => steps.length;
+  bool get canStepForward => currentStepIndex < steps.length - 1;
+  bool get canStepBackward => currentStepIndex > 0;
+  int? get leftIndex => currentStep?.left;
+  int? get rightIndex => currentStep?.right;
+  int? get midIndex => currentStep?.mid;
+}
+
+/// Search visualization notifier
+class SearchVisualizationNotifier {
+  SearchVisualizationState _state = const SearchVisualizationState();
+
+  SearchVisualizationState get state => _state;
+
+  void setAlgorithm(SearchAlgorithm algorithm, List<int> array, int target) {
+    final steps = algorithm == SearchAlgorithm.sequentialSearch
+        ? generateSequentialSearch(array, target)
+        : generateBinarySearch(array, target);
+    final firstStep = steps.isNotEmpty ? steps[0] : null;
+    _state = SearchVisualizationState(
+      algorithm: algorithm,
+      originalArray: List.from(array),
+      currentArray: firstStep?.arrayState ?? List.from(array),
+      barStates: firstStep?.barStates ?? List.filled(array.length, SearchBarState.defaultState),
+      steps: steps,
+      currentStepIndex: 0,
+      speed: _state.speed,
+      currentStep: firstStep,
+      target: target,
+    );
+  }
+
+  void play() {
+    if (_state.steps.isEmpty) return;
+    _state = _state;
+  }
+
+  void pause() {
+    _state = _state;
+  }
+
+  void stepForward() {
+    if (_state.currentStepIndex >= _state.steps.length - 1) return;
+    _advanceStep();
+  }
+
+  void stepBackward() {
+    if (_state.currentStepIndex <= 0) return;
+    final newIndex = _state.currentStepIndex - 1;
+    final step = _state.steps[newIndex];
+    _state = _state.copyWith(
+      currentStepIndex: newIndex,
+      currentArray: step.arrayState,
+      barStates: step.barStates,
+      currentStep: step,
+    );
+  }
+
+  void _advanceStep() {
+    final nextIndex = _state.currentStepIndex + 1;
+    if (nextIndex >= _state.steps.length) return;
+    final step = _state.steps[nextIndex];
+    _state = _state.copyWith(
+      currentStepIndex: nextIndex,
+      currentArray: step.arrayState,
+      barStates: step.barStates,
+      currentStep: step,
+    );
+  }
+
+  void setSpeed(double speed) {
+    _state = SearchVisualizationState(
+      algorithm: _state.algorithm,
+      originalArray: _state.originalArray,
+      currentArray: _state.currentArray,
+      barStates: _state.barStates,
+      steps: _state.steps,
+      currentStepIndex: _state.currentStepIndex,
+      speed: speed,
+      currentStep: _state.currentStep,
+      target: _state.target,
+    );
+  }
+
+  void reset() {
+    if (_state.algorithm == null) return;
+    final steps = _state.algorithm == SearchAlgorithm.sequentialSearch
+        ? generateSequentialSearch(_state.originalArray, _state.target ?? 0)
+        : generateBinarySearch(_state.originalArray, _state.target ?? 0);
+    final firstStep = steps.isNotEmpty ? steps[0] : null;
+    _state = SearchVisualizationState(
+      algorithm: _state.algorithm,
+      originalArray: _state.originalArray,
+      currentArray: firstStep?.arrayState ?? List.from(_state.originalArray),
+      barStates: firstStep?.barStates ?? List.filled(_state.originalArray.length, SearchBarState.defaultState),
+      steps: steps,
+      currentStepIndex: 0,
+      speed: _state.speed,
+      currentStep: firstStep,
+      target: _state.target,
+    );
+  }
+
+  bool tick() {
+    if (_state.currentStepIndex >= _state.steps.length - 1) return false;
+    _advanceStep();
+    return true;
+  }
+}
+
+extension on SearchVisualizationState {
+  SearchVisualizationState copyWith({
+    SearchAlgorithm? algorithm,
+    List<int>? originalArray,
+    List<int>? currentArray,
+    List<SearchBarState>? barStates,
+    List<SearchStep>? steps,
+    int? currentStepIndex,
+    double? speed,
+    SearchStep? currentStep,
+    int? target,
+  }) {
+    return SearchVisualizationState(
+      algorithm: algorithm ?? this.algorithm,
+      originalArray: originalArray ?? this.originalArray,
+      currentArray: currentArray ?? this.currentArray,
+      barStates: barStates ?? this.barStates,
+      steps: steps ?? this.steps,
+      currentStepIndex: currentStepIndex ?? this.currentStepIndex,
+      speed: speed ?? this.speed,
+      currentStep: currentStep ?? this.currentStep,
+      target: target ?? this.target,
+    );
+  }
+}
 
 class VisualizationPage extends StatefulWidget {
   const VisualizationPage({super.key});
@@ -21,18 +192,28 @@ class VisualizationPage extends StatefulWidget {
 
 class _VisualizationPageState extends State<VisualizationPage>
     with TickerProviderStateMixin {
-  final VisualizationNotifier _notifier = VisualizationNotifier();
+  // Visualization mode
+  VisualizationMode _mode = VisualizationMode.sorting;
+
+  // Sorting state
+  final VisualizationNotifier _sortNotifier = VisualizationNotifier();
   Timer? _timer;
-  SortingAlgorithm _selectedAlgorithm = SortingAlgorithm.bubbleSort;
+  SortingAlgorithm _selectedSortAlgorithm = SortingAlgorithm.bubbleSort;
   List<int> _initialArray = [64, 34, 25, 12, 22, 11, 90];
 
-  // Step description animation
+  // Search state
+  final SearchVisualizationNotifier _searchNotifier = SearchVisualizationNotifier();
+  SearchAlgorithm _selectedSearchAlgorithm = SearchAlgorithm.sequentialSearch;
+  int _searchTarget = 25;
+
+  // Animation
   String? _currentStepDescription;
   late AnimationController _stepDescController;
   late Animation<double> _stepDescFadeAnimation;
 
-  // Loading state for buttons
+  // Loading state
   bool _isResetting = false;
+  bool _isPlaying = false;
 
   @override
   void initState() {
@@ -56,15 +237,38 @@ class _VisualizationPageState extends State<VisualizationPage>
   }
 
   void _initializeAlgorithm() {
-    _notifier.setAlgorithm(_selectedAlgorithm, List.from(_initialArray));
+    if (_mode == VisualizationMode.sorting) {
+      _sortNotifier.setAlgorithm(_selectedSortAlgorithm, List.from(_initialArray));
+    } else {
+      _searchNotifier.setAlgorithm(_selectedSearchAlgorithm, List.from(_initialArray), _searchTarget);
+    }
+  }
+
+  void _onModeChanged(VisualizationMode mode) {
+    if (mode == _mode) return;
+    _stopTimer();
+    setState(() {
+      _mode = mode;
+    });
+    _initializeAlgorithm();
   }
 
   void _startTimer() {
     _timer?.cancel();
-    final interval = Duration(milliseconds: (500 / _notifier.state.speed).round());
+    final speed = _mode == VisualizationMode.sorting
+        ? _sortNotifier.state.speed
+        : _searchNotifier.state.speed;
+    final interval = Duration(milliseconds: (500 / speed).round());
     _timer = Timer.periodic(interval, (_) {
-      if (!_notifier.tick()) {
+      bool hasNext;
+      if (_mode == VisualizationMode.sorting) {
+        hasNext = _sortNotifier.tick();
+      } else {
+        hasNext = _searchNotifier.tick();
+      }
+      if (!hasNext) {
         _timer?.cancel();
+        setState(() => _isPlaying = false);
       }
       if (mounted) {
         _updateStepDescription();
@@ -78,43 +282,73 @@ class _VisualizationPageState extends State<VisualizationPage>
   }
 
   void _updateStepDescription() {
-    final step = _notifier.state.currentStep;
-    if (step != null && step.description != _currentStepDescription) {
-      _currentStepDescription = step.description;
+    String? newDesc;
+    if (_mode == VisualizationMode.sorting) {
+      newDesc = _sortNotifier.state.currentStep?.description;
+    } else {
+      newDesc = _searchNotifier.state.currentStep?.description;
+    }
+    if (newDesc != null && newDesc != _currentStepDescription) {
+      _currentStepDescription = newDesc;
       _stepDescController.forward(from: 0.0);
     }
   }
 
   void _onPlay() {
-    _notifier.play();
+    setState(() => _isPlaying = true);
+    if (_mode == VisualizationMode.sorting) {
+      _sortNotifier.play();
+    } else {
+      _searchNotifier.play();
+    }
     _startTimer();
-    setState(() {});
   }
 
   void _onPause() {
-    _notifier.pause();
     _stopTimer();
-    setState(() {});
+    setState(() => _isPlaying = false);
+    if (_mode == VisualizationMode.sorting) {
+      _sortNotifier.pause();
+    } else {
+      _searchNotifier.pause();
+    }
   }
 
   void _onStepForward() {
     _stopTimer();
-    _notifier.stepForward();
+    setState(() => _isPlaying = false);
+    if (_mode == VisualizationMode.sorting) {
+      _sortNotifier.stepForward();
+    } else {
+      _searchNotifier.stepForward();
+    }
     _updateStepDescription();
     setState(() {});
   }
 
   void _onStepBackward() {
     _stopTimer();
-    _notifier.stepBackward();
+    setState(() => _isPlaying = false);
+    if (_mode == VisualizationMode.sorting) {
+      _sortNotifier.stepBackward();
+    } else {
+      _searchNotifier.stepBackward();
+    }
     _updateStepDescription();
     setState(() {});
   }
 
   void _onReset() {
-    setState(() => _isResetting = true);
+    setState(() {
+      _isResetting = true;
+      _isPlaying = false;
+    });
     _stopTimer();
-    _notifier.reset();
+    if (_mode == VisualizationMode.sorting) {
+      _sortNotifier.reset();
+    } else {
+      _searchNotifier.reset();
+    }
     _currentStepDescription = null;
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
@@ -125,32 +359,56 @@ class _VisualizationPageState extends State<VisualizationPage>
   }
 
   void _onSpeedChanged(double speed) {
-    _notifier.setSpeed(speed);
-    if (_notifier.state.isPlaying) {
+    if (_mode == VisualizationMode.sorting) {
+      _sortNotifier.setSpeed(speed);
+    } else {
+      _searchNotifier.setSpeed(speed);
+    }
+    if (_isPlaying) {
       _stopTimer();
       _startTimer();
     }
     setState(() {});
   }
 
-  void _onAlgorithmChanged(SortingAlgorithm? algorithm) {
+  void _onSortAlgorithmChanged(SortingAlgorithm? algorithm) {
     if (algorithm == null) return;
     _stopTimer();
     setState(() {
-      _selectedAlgorithm = algorithm;
+      _selectedSortAlgorithm = algorithm;
     });
-    _notifier.setAlgorithm(algorithm, List.from(_initialArray));
+    _sortNotifier.setAlgorithm(algorithm, List.from(_initialArray));
+    _currentStepDescription = null;
+  }
+
+  void _onSearchAlgorithmChanged(SearchAlgorithm? algorithm) {
+    if (algorithm == null) return;
+    _stopTimer();
+    setState(() {
+      _selectedSearchAlgorithm = algorithm;
+    });
+    _searchNotifier.setAlgorithm(algorithm, List.from(_initialArray), _searchTarget);
     _currentStepDescription = null;
   }
 
   void _onShuffleArray() {
     _stopTimer();
+    setState(() => _isPlaying = false);
     final shuffled = List<int>.from(_initialArray)..shuffle();
     setState(() {
       _initialArray = shuffled;
     });
-    _notifier.setAlgorithm(_selectedAlgorithm, shuffled);
+    _initializeAlgorithm();
     _showToast('数组已随机');
+  }
+
+  void _onTargetChanged(int target) {
+    _stopTimer();
+    setState(() {
+      _searchTarget = target;
+    });
+    _searchNotifier.setAlgorithm(_selectedSearchAlgorithm, List.from(_initialArray), target);
+    _currentStepDescription = null;
   }
 
   void _showCustomArrayDialog() {
@@ -234,9 +492,94 @@ class _VisualizationPageState extends State<VisualizationPage>
                 setState(() {
                   _initialArray = numbers;
                 });
-                _notifier.setAlgorithm(_selectedAlgorithm, List.from(_initialArray));
+                _initializeAlgorithm();
                 _currentStepDescription = null;
                 _showToast('自定义数组已应用');
+              } catch (e) {
+                _showToast('输入格式错误');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: AppRadius.borderSm,
+              ),
+            ),
+            child: Text('应用', style: AppFonts.labelLarge(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSearchTargetDialog() {
+    final controller = TextEditingController(text: '$_searchTarget');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.borderLg,
+          side: const BorderSide(color: AppColors.border),
+        ),
+        title: Text(
+          '设置查找目标',
+          style: AppFonts.titleLarge(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '输入要查找的目标值：',
+              style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              style: AppFonts.codeMedium(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: '例如: 25',
+                hintStyle: AppFonts.codeMedium(color: AppColors.textDisabled),
+                filled: true,
+                fillColor: AppColors.codeBackground,
+                border: OutlineInputBorder(
+                  borderRadius: AppRadius.borderSm,
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: AppRadius.borderSm,
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: AppRadius.borderSm,
+                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                ),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              '取消',
+              style: AppFonts.labelLarge(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isEmpty) return;
+
+              try {
+                final target = int.parse(text);
+                Navigator.pop(context);
+                _onTargetChanged(target);
+                _showToast('目标值已设为 $target');
               } catch (e) {
                 _showToast('输入格式错误');
               }
@@ -269,9 +612,40 @@ class _VisualizationPageState extends State<VisualizationPage>
     overlay.insert(entry);
   }
 
+  // Get current speed from appropriate notifier
+  double get _currentSpeed {
+    return _mode == VisualizationMode.sorting
+        ? _sortNotifier.state.speed
+        : _searchNotifier.state.speed;
+  }
+
+  // Get current step info
+  int get _currentStepIndex {
+    return _mode == VisualizationMode.sorting
+        ? _sortNotifier.state.currentStepIndex
+        : _searchNotifier.state.currentStepIndex;
+  }
+
+  int get _totalSteps {
+    return _mode == VisualizationMode.sorting
+        ? _sortNotifier.state.totalSteps
+        : _searchNotifier.state.totalSteps;
+  }
+
+  bool get _canStepForward {
+    return _mode == VisualizationMode.sorting
+        ? _sortNotifier.state.canStepForward
+        : _searchNotifier.state.canStepForward;
+  }
+
+  bool get _canStepBackward {
+    return _mode == VisualizationMode.sorting
+        ? _sortNotifier.state.canStepBackward
+        : _searchNotifier.state.canStepBackward;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final state = _notifier.state;
     final hp = Responsive.horizontalPadding(context);
 
     return Scaffold(
@@ -285,17 +659,23 @@ class _VisualizationPageState extends State<VisualizationPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _buildAlgorithmSelector(),
+                  _buildModeSelector(),
+                  const SizedBox(height: 20),
+                  if (_mode == VisualizationMode.sorting) ...[
+                    _buildSortAlgorithmSelector(),
+                  ] else ...[
+                    _buildSearchAlgorithmSelector(),
+                  ],
                   SizedBox(height: Responsive.isMobile(context) ? 16 : 20),
                   _buildRelatedCourse(),
                   SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
-                  _buildVisualizationArea(state),
+                  _buildVisualizationArea(),
                   SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
-                  _buildControls(state),
+                  _buildControls(),
                   SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
-                  _buildCodePanel(state),
+                  _buildCodePanel(),
                   SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
-                  _buildStepInfo(state),
+                  _buildStepInfo(),
                   SizedBox(height: Responsive.isMobile(context) ? 40 : 64),
                 ],
               ),
@@ -306,80 +686,55 @@ class _VisualizationPageState extends State<VisualizationPage>
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
-    final hp = Responsive.horizontalPadding(context);
+  Widget _buildModeSelector() {
     final isMobile = Responsive.isMobile(context);
 
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: hp, vertical: isMobile ? 16 : 24),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildLogo(),
-            if (!isMobile) _buildNavLinks(context),
-          ],
-        ),
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 4 : 6),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: AppRadius.borderLg,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: VisualizationMode.values.map((mode) {
+          final isSelected = mode == _mode;
+          return GestureDetector(
+            onTap: () => _onModeChanged(mode),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 20 : 32,
+                vertical: isMobile ? 10 : 12,
+              ),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary : Colors.transparent,
+                borderRadius: AppRadius.borderMd,
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Text(
+                mode.label,
+                style: AppFonts.labelLarge(
+                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
-  Widget _buildLogo() {
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Icon(Icons.code, color: Colors.white, size: 24),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          'CodeMotion',
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNavLinks(BuildContext context) {
-    return Row(
-      children: [
-        _navLink('首页', isActive: false,
-            onTap: () => globalNavigator.navigateToHome()),
-        const SizedBox(width: 32),
-        _navLink('课程', isActive: false,
-            onTap: () => globalNavigator.navigateToCourses()),
-        const SizedBox(width: 32),
-        _navLink('可视化', isActive: true),
-        const SizedBox(width: 32),
-        _navLink('关于', isActive: false),
-      ],
-    );
-  }
-
-  Widget _navLink(String text, {bool isActive = false, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Text(
-        text,
-        style: TextStyle(
-          color: isActive ? Colors.white : Colors.white60,
-          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-          fontSize: 15,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlgorithmSelector() {
+  Widget _buildSortAlgorithmSelector() {
     final isMobile = Responsive.isMobile(context);
     final padding = isMobile ? 16.0 : 24.0;
 
@@ -399,9 +754,9 @@ class _VisualizationPageState extends State<VisualizationPage>
             spacing: isMobile ? 8 : 12,
             runSpacing: isMobile ? 8 : 12,
             children: SortingAlgorithm.values.map((algo) {
-              final isSelected = algo == _selectedAlgorithm;
+              final isSelected = algo == _selectedSortAlgorithm;
               return GestureDetector(
-                onTap: () => _onAlgorithmChanged(algo),
+                onTap: () => _onSortAlgorithmChanged(algo),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: EdgeInsets.symmetric(
@@ -446,7 +801,7 @@ class _VisualizationPageState extends State<VisualizationPage>
           ),
           SizedBox(height: isMobile ? 12 : 16),
           Text(
-            _selectedAlgorithm.description,
+            _selectedSortAlgorithm.description,
             style: AppFonts.bodyMedium(color: AppColors.textSecondary),
           ),
         ],
@@ -454,9 +809,129 @@ class _VisualizationPageState extends State<VisualizationPage>
     );
   }
 
+  Widget _buildSearchAlgorithmSelector() {
+    final isMobile = Responsive.isMobile(context);
+    final padding = isMobile ? 16.0 : 24.0;
+
+    return Container(
+      padding: EdgeInsets.all(padding),
+      decoration: AppDecorations.card(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            '选择查找算法',
+            style: AppFonts.titleMedium(color: Colors.white),
+          ),
+          SizedBox(height: isMobile ? 12 : 16),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: isMobile ? 8 : 12,
+            runSpacing: isMobile ? 8 : 12,
+            children: SearchAlgorithm.values.map((algo) {
+              final isSelected = algo == _selectedSearchAlgorithm;
+              return GestureDetector(
+                onTap: () => _onSearchAlgorithmChanged(algo),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 12 : 16,
+                    vertical: isMobile ? 8 : 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primary.withValues(alpha: 0.2)
+                        : Colors.transparent,
+                    borderRadius: AppRadius.borderSm,
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.border,
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        algo.name,
+                        style: AppFonts.labelLarge(
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        algo.complexity,
+                        style: AppFonts.bodySmall(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          SizedBox(height: isMobile ? 12 : 16),
+          Text(
+            _selectedSearchAlgorithm.description,
+            style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+          ),
+          SizedBox(height: isMobile ? 12 : 16),
+          _buildTargetInput(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTargetInput() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          '目标值: ',
+          style: AppFonts.labelLarge(color: AppColors.textSecondary),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated,
+            borderRadius: AppRadius.borderSm,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Text(
+            '$_searchTarget',
+            style: AppFonts.codeMedium(color: AppColors.primary),
+          ),
+        ),
+        const SizedBox(width: 12),
+        OutlinedButton.icon(
+          onPressed: _showSearchTargetDialog,
+          icon: const Icon(Icons.edit, size: 14),
+          label: const Text('修改'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.textSecondary,
+            side: const BorderSide(color: AppColors.border),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildRelatedCourse() {
     final isMobile = Responsive.isMobile(context);
     final padding = isMobile ? 16.0 : 20.0;
+
+    final courseId = _mode == VisualizationMode.sorting
+        ? 'algorithms_sorting'
+        : 'algorithms_searching';
+    final courseName = _mode == VisualizationMode.sorting
+        ? '排序算法'
+        : '查找算法';
 
     return Container(
       padding: EdgeInsets.all(padding),
@@ -487,14 +962,14 @@ class _VisualizationPageState extends State<VisualizationPage>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '排序算法 · 查找算法',
+                  courseName,
                   style: AppFonts.labelLarge(color: Colors.white),
                 ),
               ],
             ),
           ),
           GestureDetector(
-            onTap: () => globalNavigator.navigateToCourseDetail('algorithms_sorting'),
+            onTap: () => globalNavigator.navigateToCourseDetail(courseId),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -520,7 +995,7 @@ class _VisualizationPageState extends State<VisualizationPage>
     );
   }
 
-  Widget _buildVisualizationArea(VisualizationState state) {
+  Widget _buildVisualizationArea() {
     final isMobile = Responsive.isMobile(context);
     final padding = isMobile ? 16.0 : 32.0;
     final chartHeight = isMobile ? 200.0 : 280.0;
@@ -621,15 +1096,10 @@ class _VisualizationPageState extends State<VisualizationPage>
               ],
             ),
           SizedBox(height: isMobile ? 16 : 32),
-          SizedBox(
-            height: chartHeight,
-            child: ArrayBarChart(
-              values: state.currentArray,
-              states: state.barStates,
-              barWidth: barWidth,
-              showLabels: true,
-            ),
-          ),
+          if (_mode == VisualizationMode.sorting)
+            _buildSortingChart(chartHeight, barWidth)
+          else
+            _buildSearchChart(chartHeight, barWidth),
           SizedBox(height: isMobile ? 12 : 16),
           _buildLegend(),
         ],
@@ -637,21 +1107,54 @@ class _VisualizationPageState extends State<VisualizationPage>
     );
   }
 
+  Widget _buildSortingChart(double chartHeight, double barWidth) {
+    final state = _sortNotifier.state;
+    return SizedBox(
+      height: chartHeight,
+      child: ArrayBarChart(
+        values: state.currentArray,
+        states: state.barStates,
+        barWidth: barWidth,
+        showLabels: true,
+      ),
+    );
+  }
+
+  Widget _buildSearchChart(double chartHeight, double barWidth) {
+    final state = _searchNotifier.state;
+    return SizedBox(
+      height: chartHeight,
+      child: SearchBarChart(
+        values: state.currentArray,
+        barStates: state.barStates,
+        barWidth: barWidth,
+        showLabels: true,
+        leftIndex: state.leftIndex,
+        rightIndex: state.rightIndex,
+        midIndex: state.midIndex,
+      ),
+    );
+  }
+
   Widget _buildLegend() {
     final isMobile = Responsive.isMobile(context);
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: isMobile ? 12 : 24,
-      runSpacing: isMobile ? 8 : 0,
-      children: [
-        _legendItem(AppColors.vizDefault, '默认'),
-        _legendItem(AppColors.vizComparing, '比较中'),
-        _legendItem(AppColors.vizSwapping, '交换中'),
-        _legendItem(AppColors.vizPivot, '基准'),
-        _legendItem(AppColors.vizSorted, '已完成'),
-        _legendItem(AppColors.vizHighlight, '高亮'),
-      ],
-    );
+    if (_mode == VisualizationMode.sorting) {
+      return Wrap(
+        alignment: WrapAlignment.center,
+        spacing: isMobile ? 12 : 24,
+        runSpacing: isMobile ? 8 : 0,
+        children: [
+          _legendItem(AppColors.vizDefault, '默认'),
+          _legendItem(AppColors.vizComparing, '比较中'),
+          _legendItem(AppColors.vizSwapping, '交换中'),
+          _legendItem(AppColors.vizPivot, '基准'),
+          _legendItem(AppColors.vizSorted, '已完成'),
+          _legendItem(AppColors.vizHighlight, '高亮'),
+        ],
+      );
+    } else {
+      return const SearchLegend();
+    }
   }
 
   Widget _legendItem(Color color, String label) {
@@ -674,7 +1177,7 @@ class _VisualizationPageState extends State<VisualizationPage>
     );
   }
 
-  Widget _buildControls(VisualizationState state) {
+  Widget _buildControls() {
     final isMobile = Responsive.isMobile(context);
     final padding = isMobile ? 16.0 : 20.0;
 
@@ -683,8 +1186,7 @@ class _VisualizationPageState extends State<VisualizationPage>
       decoration: AppDecorations.card(),
       child: Column(
         children: [
-          // Speed display
-          if (state.isPlaying)
+          if (_isPlaying)
             Padding(
               padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
               child: Row(
@@ -693,7 +1195,7 @@ class _VisualizationPageState extends State<VisualizationPage>
                   const Icon(Icons.speed, size: 16, color: AppColors.primary),
                   const SizedBox(width: 8),
                   Text(
-                    '当前速度: ${state.speed}x',
+                    '当前速度: ${_currentSpeed}x',
                     style: AppFonts.labelMedium(color: AppColors.primary),
                   ),
                   const SizedBox(width: 8),
@@ -708,33 +1210,32 @@ class _VisualizationPageState extends State<VisualizationPage>
             children: [
               Expanded(
                 child: VisualizationControls(
-                  isPlaying: state.isPlaying,
+                  isPlaying: _isPlaying,
                   onPlay: _onPlay,
                   onPause: _onPause,
-                  onStepForward: state.canStepForward ? _onStepForward : null,
-                  onStepBackward: state.canStepBackward ? _onStepBackward : null,
+                  onStepForward: _canStepForward ? _onStepForward : null,
+                  onStepBackward: _canStepBackward ? _onStepBackward : null,
                   onReset: _isResetting ? null : _onReset,
-                  speed: state.speed,
-                  onSpeedChanged: state.isPlaying ? null : _onSpeedChanged,
+                  speed: _currentSpeed,
+                  onSpeedChanged: _isPlaying ? null : _onSpeedChanged,
                   showSpeedControl: true,
                   showStepControls: true,
-                  isStepForwardEnabled: state.canStepForward,
-                  isStepBackwardEnabled: state.canStepBackward,
+                  isStepForwardEnabled: _canStepForward,
+                  isStepBackwardEnabled: _canStepBackward,
                 ),
               ),
             ],
           ),
-          // Speed slider (only when not playing)
-          if (!state.isPlaying) ...[
+          if (!_isPlaying) ...[
             SizedBox(height: isMobile ? 12 : 16),
-            _buildSpeedSlider(state),
+            _buildSpeedSlider(),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildSpeedSlider(VisualizationState state) {
+  Widget _buildSpeedSlider() {
     return Row(
       children: [
         const Icon(Icons.speed, size: 16, color: AppColors.textTertiary),
@@ -755,11 +1256,11 @@ class _VisualizationPageState extends State<VisualizationPage>
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
             ),
             child: Slider(
-              value: state.speed,
+              value: _currentSpeed,
               min: 0.25,
               max: 2.0,
               divisions: 7,
-              onChanged: state.isPlaying ? null : _onSpeedChanged,
+              onChanged: _isPlaying ? null : _onSpeedChanged,
             ),
           ),
         ),
@@ -773,7 +1274,7 @@ class _VisualizationPageState extends State<VisualizationPage>
             border: Border.all(color: AppColors.border),
           ),
           child: Text(
-            '${state.speed}x',
+            '${_currentSpeed}x',
             style: AppFonts.labelMedium(color: AppColors.primary),
             textAlign: TextAlign.center,
           ),
@@ -782,7 +1283,7 @@ class _VisualizationPageState extends State<VisualizationPage>
     );
   }
 
-  Widget _buildCodePanel(VisualizationState state) {
+  Widget _buildCodePanel() {
     final isMobile = Responsive.isMobile(context);
     final padding = isMobile ? 12.0 : 16.0;
     final fontSize = isMobile ? 11.0 : 13.0;
@@ -800,7 +1301,9 @@ class _VisualizationPageState extends State<VisualizationPage>
                 const Icon(Icons.code, color: AppColors.primary, size: 18),
                 const SizedBox(width: 8),
                 Text(
-                  '算法代码 - ${_selectedAlgorithm.name}',
+                  _mode == VisualizationMode.sorting
+                      ? '算法代码 - ${_selectedSortAlgorithm.name}'
+                      : '算法代码 - ${_selectedSearchAlgorithm.name}',
                   style: AppFonts.titleMedium(color: Colors.white),
                 ),
               ],
@@ -812,8 +1315,8 @@ class _VisualizationPageState extends State<VisualizationPage>
             child: Padding(
               padding: EdgeInsets.all(padding),
               child: CodeHighlight(
-                code: _getAlgorithmCode(_selectedAlgorithm),
-                highlightedLine: state.currentStep?.codeLine,
+                code: _getAlgorithmCode(),
+                highlightedLine: _getHighlightedLine(),
                 showLineNumbers: true,
                 fontSize: fontSize,
               ),
@@ -824,127 +1327,11 @@ class _VisualizationPageState extends State<VisualizationPage>
     );
   }
 
-  Widget _buildStepInfo(VisualizationState state) {
-    final step = state.currentStep;
-    final isMobile = Responsive.isMobile(context);
-    final padding = isMobile ? 12.0 : 16.0;
-
-    return Container(
-      padding: EdgeInsets.all(padding),
-      decoration: AppDecorations.card(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          StepIndicator(
-            currentStep: state.currentStepIndex + 1,
-            totalSteps: state.totalSteps,
-            labelFormat: StepLabelFormat.fraction,
-          ),
-          if (step != null) ...[
-            SizedBox(height: isMobile ? 12 : 16),
-            if (isMobile)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getStepTypeColor(step.type).withValues(alpha: 0.15),
-                      borderRadius: AppRadius.borderXs,
-                      border: Border.all(
-                        color: _getStepTypeColor(step.type).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Text(
-                      step.type.label,
-                      style: AppFonts.labelMedium(
-                        color: _getStepTypeColor(step.type),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  AnimatedBuilder(
-                    animation: _stepDescFadeAnimation,
-                    builder: (context, child) {
-                      return FadeTransition(
-                        opacity: _stepDescFadeAnimation,
-                        child: Text(
-                          step.description,
-                          style: AppFonts.bodyMedium(color: AppColors.textSecondary),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              )
-            else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getStepTypeColor(step.type).withValues(alpha: 0.15),
-                      borderRadius: AppRadius.borderXs,
-                      border: Border.all(
-                        color: _getStepTypeColor(step.type).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Text(
-                      step.type.label,
-                      style: AppFonts.labelMedium(
-                        color: _getStepTypeColor(step.type),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: AnimatedBuilder(
-                      animation: _stepDescFadeAnimation,
-                      builder: (context, child) {
-                        return FadeTransition(
-                          opacity: _stepDescFadeAnimation,
-                          child: Text(
-                            step.description,
-                            style: AppFonts.bodyMedium(color: AppColors.textSecondary),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Color _getStepTypeColor(SortStepType type) {
-    switch (type) {
-      case SortStepType.compare:
-        return AppColors.vizComparing;
-      case SortStepType.swap:
-        return AppColors.vizSwapping;
-      case SortStepType.complete:
-        return AppColors.vizSorted;
-      case SortStepType.setPivot:
-        return AppColors.vizPivot;
-      case SortStepType.overwrite:
-        return AppColors.vizHighlight;
-    }
-  }
-
-  String _getAlgorithmCode(SortingAlgorithm algo) {
-    switch (algo) {
-      case SortingAlgorithm.bubbleSort:
-        return '''void bubbleSort(vector<int>& arr) {
+  String _getAlgorithmCode() {
+    if (_mode == VisualizationMode.sorting) {
+      switch (_selectedSortAlgorithm) {
+        case SortingAlgorithm.bubbleSort:
+          return '''void bubbleSort(vector<int>& arr) {
     int n = arr.size();
     for (int i = 0; i < n - 1; i++) {
         for (int j = 0; j < n - i - 1; j++) {
@@ -954,8 +1341,8 @@ class _VisualizationPageState extends State<VisualizationPage>
         }
     }
 }''';
-      case SortingAlgorithm.selectionSort:
-        return '''void selectionSort(vector<int>& arr) {
+        case SortingAlgorithm.selectionSort:
+          return '''void selectionSort(vector<int>& arr) {
     int n = arr.size();
     for (int i = 0; i < n - 1; i++) {
         int minIdx = i;
@@ -967,8 +1354,8 @@ class _VisualizationPageState extends State<VisualizationPage>
         swap(arr[i], arr[minIdx]);
     }
 }''';
-      case SortingAlgorithm.insertionSort:
-        return '''void insertionSort(vector<int>& arr) {
+        case SortingAlgorithm.insertionSort:
+          return '''void insertionSort(vector<int>& arr) {
     int n = arr.size();
     for (int i = 1; i < n; i++) {
         int key = arr[i];
@@ -980,8 +1367,8 @@ class _VisualizationPageState extends State<VisualizationPage>
         arr[j + 1] = key;
     }
 }''';
-      case SortingAlgorithm.quickSort:
-        return '''void quickSort(vector<int>& arr, int low, int high) {
+        case SortingAlgorithm.quickSort:
+          return '''void quickSort(vector<int>& arr, int low, int high) {
     if (low < high) {
         int pivot = arr[high];
         int i = low - 1;
@@ -997,8 +1384,8 @@ class _VisualizationPageState extends State<VisualizationPage>
         quickSort(arr, pi + 1, high);
     }
 }''';
-      case SortingAlgorithm.mergeSort:
-        return '''void merge(vector<int>& arr, int l, int m, int r) {
+        case SortingAlgorithm.mergeSort:
+          return '''void merge(vector<int>& arr, int l, int m, int r) {
     vector<int> left(arr.begin() + l, arr.begin() + m + 1);
     vector<int> right(arr.begin() + m + 1, arr.begin() + r + 1);
     int i = 0, j = 0, k = l;
@@ -1017,8 +1404,8 @@ void mergeSort(vector<int>& arr, int l, int r) {
         merge(arr, l, m, r);
     }
 }''';
-      case SortingAlgorithm.heapSort:
-        return '''void heapify(vector<int>& arr, int n, int i) {
+        case SortingAlgorithm.heapSort:
+          return '''void heapify(vector<int>& arr, int n, int i) {
     int largest = i;
     int left = 2 * i + 1;
     int right = 2 * i + 2;
@@ -1041,7 +1428,245 @@ void heapSort(vector<int>& arr) {
         heapify(arr, i, 0);
     }
 }''';
+      }
+    } else {
+      switch (_selectedSearchAlgorithm) {
+        case SearchAlgorithm.sequentialSearch:
+          return '''int sequentialSearch(const vector<int>& arr, int target) {
+    for (int i = 0; i < arr.size(); i++) {
+        if (arr[i] == target) return i;
     }
+    return -1;
+}''';
+        case SearchAlgorithm.binarySearch:
+          return '''int binarySearch(const vector<int>& arr, int target) {
+    int left = 0, right = arr.size() - 1;
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        if (arr[mid] == target) return mid;
+        else if (arr[mid] < target) left = mid + 1;
+        else right = mid - 1;
+    }
+    return -1;
+}''';
+      }
+    }
+  }
+
+  int? _getHighlightedLine() {
+    if (_mode == VisualizationMode.sorting) {
+      return _sortNotifier.state.currentStep?.codeLine;
+    } else {
+      return _searchNotifier.state.currentStep?.codeLine;
+    }
+  }
+
+  Widget _buildStepInfo() {
+    final isMobile = Responsive.isMobile(context);
+    final padding = isMobile ? 12.0 : 16.0;
+
+    return Container(
+      padding: EdgeInsets.all(padding),
+      decoration: AppDecorations.card(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          StepIndicator(
+            currentStep: _currentStepIndex + 1,
+            totalSteps: _totalSteps,
+            labelFormat: StepLabelFormat.fraction,
+          ),
+          if (_currentStepDescription != null) ...[
+            SizedBox(height: isMobile ? 12 : 16),
+            if (isMobile)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildStepTypeBadge(),
+                  const SizedBox(height: 8),
+                  AnimatedBuilder(
+                    animation: _stepDescFadeAnimation,
+                    builder: (context, child) {
+                      return FadeTransition(
+                        opacity: _stepDescFadeAnimation,
+                        child: Text(
+                          _currentStepDescription!,
+                          style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildStepTypeBadge(),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: AnimatedBuilder(
+                      animation: _stepDescFadeAnimation,
+                      builder: (context, child) {
+                        return FadeTransition(
+                          opacity: _stepDescFadeAnimation,
+                          child: Text(
+                            _currentStepDescription!,
+                            style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepTypeBadge() {
+    Color color;
+    String label;
+
+    if (_mode == VisualizationMode.sorting) {
+      final stepType = _sortNotifier.state.currentStep?.type;
+      switch (stepType) {
+        case SortStepType.compare:
+          color = AppColors.vizComparing;
+          label = '比较';
+          break;
+        case SortStepType.swap:
+          color = AppColors.vizSwapping;
+          label = '交换';
+          break;
+        case SortStepType.setPivot:
+          color = AppColors.vizPivot;
+          label = '设置基准';
+          break;
+        case SortStepType.overwrite:
+          color = AppColors.vizHighlight;
+          label = '覆盖';
+          break;
+        case SortStepType.complete:
+          color = AppColors.vizSorted;
+          label = '完成';
+          break;
+        default:
+          color = AppColors.textSecondary;
+          label = '进行中';
+      }
+    } else {
+      final stepType = _searchNotifier.state.currentStep?.type;
+      switch (stepType) {
+        case SearchActionType.comparing:
+          color = AppColors.vizComparing;
+          label = '比较';
+          break;
+        case SearchActionType.found:
+          color = AppColors.vizSorted;
+          label = '找到';
+          break;
+        case SearchActionType.eliminated:
+          color = AppColors.textDisabled;
+          label = '已排除';
+          break;
+        case SearchActionType.searching:
+          color = AppColors.primary;
+          label = '查找中';
+          break;
+        case null:
+          color = AppColors.textSecondary;
+          label = '进行中';
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: AppRadius.borderXs,
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: AppFonts.labelMedium(color: color),
+      ),
+    );
+  }
+
+  Widget _buildAppBar(BuildContext context) {
+    final hp = Responsive.horizontalPadding(context);
+    final isMobile = Responsive.isMobile(context);
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: hp, vertical: isMobile ? 16 : 24),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildLogo(),
+            if (!isMobile) _buildNavLinks(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: AppColors.primaryGradient,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(Icons.code, color: Colors.white, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'CodeMotion',
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNavLinks(BuildContext context) {
+    return Row(
+      children: [
+        _navLink('首页', isActive: false,
+            onTap: () => globalNavigator.navigateToHome()),
+        const SizedBox(width: 32),
+        _navLink('课程', isActive: false,
+            onTap: () => globalNavigator.navigateToCourses()),
+        const SizedBox(width: 32),
+        _navLink('可视化', isActive: true),
+        const SizedBox(width: 32),
+        _navLink('关于', isActive: false),
+      ],
+    );
+  }
+
+  Widget _navLink(String text, {bool isActive = false, VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Text(
+        text,
+        style: TextStyle(
+          color: isActive ? Colors.white : Colors.white60,
+          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+          fontSize: 15,
+        ),
+      ),
+    );
   }
 }
 
@@ -1148,5 +1773,3 @@ class _ToastWidgetState extends State<_ToastWidget>
     );
   }
 }
-
-
