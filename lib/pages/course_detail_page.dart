@@ -25,14 +25,16 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollToTop = false;
+
   // Track expanded chapters and lessons
   final Set<String> _expandedChapters = {};
   final Set<String> _expandedLessons = {};
-  
+
   // Track lesson completion
   final Set<String> _completedLessons = {};
-  
+
   // Search
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -49,15 +51,34 @@ class _CourseDetailPageState extends State<CourseDetailPage>
       curve: Curves.easeOut,
     );
     _animationController.forward();
-    
+
     // Load saved progress
     _loadProgress();
+
+    // Listen to scroll position for FAB visibility
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final showFab = _scrollController.offset > 400;
+    if (showFab != _showScrollToTop) {
+      setState(() => _showScrollToTop = showFab);
+    }
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -111,6 +132,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           _buildAppBar(context, chapter, hp, isMobile),
           SliverToBoxAdapter(
@@ -128,6 +150,23 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             ),
           ),
         ],
+      ),
+      floatingActionButton: AnimatedScale(
+        scale: _showScrollToTop ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutBack,
+        child: AnimatedOpacity(
+          opacity: _showScrollToTop ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          child: FloatingActionButton(
+            onPressed: _scrollToTop,
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            mini: true,
+            tooltip: '回到顶部',
+            child: const Icon(Icons.keyboard_arrow_up, size: 28),
+          ),
+        ),
       ),
     );
   }
@@ -533,6 +572,7 @@ class _LessonCardState extends State<_LessonCard>
   late AnimationController _controller;
   late Animation<double> _expandAnimation;
   late Animation<double> _rotateAnimation;
+  bool _isHovered = false;
 
   @override
   void initState() {
@@ -572,116 +612,142 @@ class _LessonCardState extends State<_LessonCard>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: widget.isExpanded 
-              ? AppColors.primary.withValues(alpha: 0.3) 
-              : AppColors.border,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Header - always visible
-          GestureDetector(
-            onTap: widget.onToggle,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  // Completion checkbox
-                  GestureDetector(
-                    onTap: widget.onComplete,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: widget.isCompleted 
-                            ? AppColors.success 
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: widget.isCompleted 
-                              ? AppColors.success 
-                              : AppColors.border,
-                          width: 2,
-                        ),
-                      ),
-                      child: widget.isCompleted
-                          ? const Icon(Icons.check, color: Colors.white, size: 16)
-                          : null,
-                    ),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: widget.isExpanded
+                ? AppColors.primary.withValues(alpha: 0.5)
+                : _isHovered
+                    ? AppColors.primary.withValues(alpha: 0.3)
+                    : AppColors.border,
+            width: widget.isExpanded || _isHovered ? 1.5 : 1,
+          ),
+          boxShadow: _isHovered
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
                   ),
-                  const SizedBox(width: 16),
-                  // Lesson info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.lesson.title,
-                          style: AppFonts.titleMedium(
-                            color: widget.isCompleted 
-                                ? AppColors.textTertiary 
-                                : Colors.white,
-                          ).copyWith(
-                            decoration: widget.isCompleted 
-                                ? TextDecoration.lineThrough 
-                                : null,
+                ]
+              : null,
+        ),
+        transform: _isHovered
+            ? (Matrix4.translationValues(0.0, -2.0, 0.0))
+            : Matrix4.identity(),
+        child: Column(
+          children: [
+            // Header - always visible
+            GestureDetector(
+              onTap: widget.onToggle,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Completion checkbox
+                    GestureDetector(
+                      onTap: widget.onComplete,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: widget.isCompleted
+                              ? AppColors.success
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: widget.isCompleted
+                                ? AppColors.success
+                                : AppColors.border,
+                            width: 2,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.code,
-                              size: 14,
-                              color: AppColors.textTertiary,
+                        child: widget.isCompleted
+                            ? const Icon(Icons.check, color: Colors.white, size: 16)
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Lesson info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.lesson.title,
+                            style: AppFonts.titleMedium(
+                              color: widget.isCompleted
+                                  ? AppColors.textTertiary
+                                  : Colors.white,
+                            ).copyWith(
+                              decoration: widget.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${widget.lesson.codeExamples.length} 个代码示例',
-                              style: AppFonts.labelMedium(color: AppColors.textTertiary),
-                            ),
-                            const SizedBox(width: 12),
-                            Icon(
-                              Icons.lightbulb_outline,
-                              size: 14,
-                              color: AppColors.textTertiary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${widget.lesson.keyPoints.length} 个知识点',
-                              style: AppFonts.labelMedium(color: AppColors.textTertiary),
-                            ),
-                          ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.code,
+                                size: 14,
+                                color: AppColors.textTertiary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${widget.lesson.codeExamples.length} 个代码示例',
+                                style: AppFonts.labelMedium(color: AppColors.textTertiary),
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                Icons.lightbulb_outline,
+                                size: 14,
+                                color: AppColors.textTertiary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${widget.lesson.keyPoints.length} 个知识点',
+                                style: AppFonts.labelMedium(color: AppColors.textTertiary),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Expand indicator with animated color
+                    RotationTransition(
+                      turns: _rotateAnimation,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          Icons.expand_more,
+                          key: ValueKey(widget.isExpanded),
+                          color: widget.isExpanded
+                              ? AppColors.primary
+                              : AppColors.textTertiary,
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  // Expand indicator
-                  RotationTransition(
-                    turns: _rotateAnimation,
-                    child: Icon(
-                      Icons.expand_more,
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          // Expandable content
-          SizeTransition(
-            sizeFactor: _expandAnimation,
-            child: _buildExpandedContent(),
-          ),
-        ],
+            // Expandable content
+            SizeTransition(
+              sizeFactor: _expandAnimation,
+              child: _buildExpandedContent(),
+            ),
+          ],
+        ),
       ),
     );
   }
