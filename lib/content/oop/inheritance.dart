@@ -7,6 +7,7 @@ const chapterInheritance = CourseChapter(
   title: '继承',
   description: '学习 C++ 中的继承机制，包括单继承、多层继承、访问控制和派生类的构造与析构。',
   difficulty: DifficultyLevel.intermediate,
+  category: CourseCategory.oop,
   lessons: [
     CourseLesson(
       id: 'oop_inheritance_basics',

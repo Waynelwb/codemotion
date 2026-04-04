@@ -7,6 +7,7 @@ const chapterStlAlgorithms = CourseChapter(
   title: 'STL 算法',
   description: '学习 C++ STL 常用算法，包括排序、查找、遍历变换、数值计算等。',
   difficulty: DifficultyLevel.intermediate,
+  category: CourseCategory.stl,
   lessons: [
     CourseLesson(
       id: 'stl_algorithms_sorting',

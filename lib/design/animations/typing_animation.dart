@@ -45,7 +45,6 @@ class _TypingAnimationState extends State<TypingAnimation>
     with SingleTickerProviderStateMixin {
   late AnimationController _cursorController;
   int _displayedCharCount = 0;
-  bool _isTyping = false;
   bool _animationComplete = false;
 
   @override
@@ -61,7 +60,6 @@ class _TypingAnimationState extends State<TypingAnimation>
     // 延迟后开始打字
     Future.delayed(widget.startDelay, () {
       if (mounted) {
-        setState(() => _isTyping = true);
         _typeNextChar();
       }
     });
@@ -178,7 +176,6 @@ class _MultiLineTypingAnimationState extends State<MultiLineTypingAnimation>
     with TickerProviderStateMixin {
   int _currentLine = 0;
   int _displayedCharCount = 0;
-  bool _isTyping = false;
   bool _animationComplete = false;
 
   @override
@@ -186,7 +183,6 @@ class _MultiLineTypingAnimationState extends State<MultiLineTypingAnimation>
     super.initState();
     Future.delayed(widget.startDelay, () {
       if (mounted) {
-        setState(() => _isTyping = true);
         _typeNextChar();
       }
     });
@@ -290,14 +286,12 @@ class SyntaxTypingAnimation extends StatefulWidget {
 
 class _SyntaxTypingAnimationState extends State<SyntaxTypingAnimation> {
   int _displayedCharCount = 0;
-  bool _isTyping = false;
 
   @override
   void initState() {
     super.initState();
     Future.delayed(widget.startDelay, () {
       if (mounted) {
-        setState(() => _isTyping = true);
         _typeNextChar();
       }
     });

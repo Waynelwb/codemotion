@@ -70,25 +70,27 @@ class _PulseAnimationState extends State<PulseAnimation>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // 脉冲扩散效果
-        AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Opacity(
-                opacity: _opacityAnimation.value,
-                child: widget.child,
-              ),
-            );
-          },
-        ),
-        // 原始内容
-        widget.child,
-      ],
+    return SizedBox(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 脉冲扩散效果
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Opacity(
+                  opacity: _opacityAnimation.value,
+                  child: widget.child,
+                ),
+              );
+            },
+          ),
+          // 原始内容
+          widget.child,
+        ],
+      ),
     );
   }
 }

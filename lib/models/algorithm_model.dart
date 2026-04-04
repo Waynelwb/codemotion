@@ -43,7 +43,8 @@ enum SortingAlgorithm {
   selectionSort('选择排序', 'O(n²)', '每次从未排序部分选择最小元素放到已排序部分末尾。'),
   insertionSort('插入排序', 'O(n²)', '将元素逐个插入已排序序列，像整理扑克牌一样。'),
   quickSort('快速排序', 'O(n log n)', '采用分治策略，选择基准元素将数组分区后递归排序。'),
-  mergeSort('归并排序', 'O(n log n)', '分治思想，将数组递归拆分后合并，适合大规模数据。');
+  mergeSort('归并排序', 'O(n log n)', '分治思想，将数组递归拆分后合并，适合大规模数据。'),
+  heapSort('堆排序', 'O(n log n)', '基于二叉堆数据结构，稳定 O(n log n) 时间复杂度，原地排序。');
 
   const SortingAlgorithm(this.name, this.complexity, this.description);
   final String name;
@@ -65,6 +66,8 @@ class SortAlgorithmGenerator {
         return _generateQuickSort(List.from(inputArray));
       case SortingAlgorithm.mergeSort:
         return _generateMergeSort(List.from(inputArray));
+      case SortingAlgorithm.heapSort:
+        return _generateHeapSort(List.from(inputArray));
     }
   }
 
@@ -433,6 +436,84 @@ class SortAlgorithmGenerator {
     mergeSortHelper(0, arr.length - 1);
     steps.addAll(_makeStates(arr, SortStepType.complete, '归并排序完成！', 5));
 
+    return steps;
+  }
+
+  static List<SortStep> _generateHeapSort(List<int> arr) {
+    final steps = <SortStep>[];
+    final n = arr.length;
+
+    // Heapify helper
+    void heapify(int size, int i) {
+      int largest = i;
+      int left = 2 * i + 1;
+      int right = 2 * i + 2;
+
+      if (left < size && arr[left] > arr[largest]) {
+        largest = left;
+      }
+      if (right < size && arr[right] > arr[largest]) {
+        largest = right;
+      }
+
+      if (largest != i) {
+        steps.addAll(_makeStates(
+          arr,
+          SortStepType.swap,
+          '交换 arr[$i]=${arr[i]} 和 arr[$largest]=${arr[largest]}',
+          1,
+          i: i,
+          j: largest,
+        ));
+        final tmp = arr[i];
+        arr[i] = arr[largest];
+        arr[largest] = tmp;
+        steps.addAll(_makeStates(arr, SortStepType.swap, '交换完成', 2, i: i, j: largest));
+        heapify(size, largest);
+      }
+    }
+
+    steps.addAll(_makeStates(arr, SortStepType.compare, '开始堆排序', 0));
+
+    // Build max heap
+    steps.addAll(_makeStates(arr, SortStepType.compare, '构建最大堆', 1));
+    for (int i = n ~/ 2 - 1; i >= 0; i--) {
+      heapify(n, i);
+    }
+    steps.addAll(_makeStates(arr, SortStepType.complete, '最大堆构建完成', 2));
+
+    // Extract elements from heap
+    for (int i = n - 1; i > 0; i--) {
+      steps.addAll(_makeStates(
+        arr,
+        SortStepType.swap,
+        '交换堆顶 arr[0]=${arr[0]} 和堆尾 arr[$i]=${arr[i]}',
+        3,
+        i: 0,
+        j: i,
+      ));
+      final tmp = arr[0];
+      arr[0] = arr[i];
+      arr[i] = tmp;
+      steps.addAll(_makeStates(arr, SortStepType.swap, '交换完成', 4, i: 0, j: i));
+
+      // Mark the sorted position
+      final sortedStates = List<BarState>.filled(n, BarState.defaultState);
+      for (int k = i + 1; k < n; k++) {
+        sortedStates[k] = BarState.sorted;
+      }
+      steps.add(SortStep(
+        arrayState: List.from(arr),
+        barStates: List.from(sortedStates),
+        type: SortStepType.complete,
+        description: '对前 $i 个元素重新调整为最大堆',
+        codeLine: 5,
+      ));
+
+      heapify(i, 0);
+    }
+
+    steps.addAll(_makeStates(arr, SortStepType.complete, '堆排序完成！', 6));
     return steps;
   }
 }

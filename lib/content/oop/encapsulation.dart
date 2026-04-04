@@ -7,6 +7,7 @@ const chapterEncapsulation = CourseChapter(
   title: '封装',
   description: '学习 C++ 中的封装机制，包括访问控制、友元、getter/setter 以及类的友元声明。',
   difficulty: DifficultyLevel.intermediate,
+  category: CourseCategory.oop,
   lessons: [
     CourseLesson(
       id: 'oop_encapsulation_access',

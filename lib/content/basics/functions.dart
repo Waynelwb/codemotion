@@ -7,6 +7,7 @@ const chapterFunctions = CourseChapter(
   title: '函数',
   description: '学习 C++ 中函数的定义、参数传递、返回值以及递归函数的原理和应用。',
   difficulty: DifficultyLevel.beginner,
+  category: CourseCategory.basics,
   lessons: [
     CourseLesson(
       id: 'basics_functions_basics',

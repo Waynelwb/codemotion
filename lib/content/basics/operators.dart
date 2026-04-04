@@ -7,6 +7,7 @@ const chapterOperators = CourseChapter(
   title: '运算符',
   description: '学习 C++ 中的各种运算符，包括算术运算符、关系运算符、逻辑运算符和位运算符。',
   difficulty: DifficultyLevel.beginner,
+  category: CourseCategory.basics,
   lessons: [
     CourseLesson(
       id: 'basics_operators_arithmetic',

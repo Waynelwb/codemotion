@@ -269,80 +269,72 @@ class _CourseListPageState extends State<CourseListPage>
       duration: const Duration(milliseconds: 500),
       delay: const Duration(milliseconds: 100),
       child: Container(
-        padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
-          borderRadius: AppRadius.borderMd,
-          border: Border.all(color: AppColors.border),
+          borderRadius: AppRadius.borderLg,
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final tabWidth = constraints.maxWidth / categories.length;
-            return Stack(
-              children: [
-                // Sliding indicator
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
-                  left: _selectedCategoryIndex * tabWidth,
-                  top: 4,
-                  bottom: 4,
-                  width: tabWidth - 4,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: AppRadius.borderSm,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+        child: ClipRRect(
+          borderRadius: AppRadius.borderLg,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final tabWidth = constraints.maxWidth / categories.length;
+              // Indicator width: full tab width minus 8px margin for nice spacing
+              const indicatorMargin = 4.0;
+              final indicatorWidth = tabWidth - indicatorMargin * 2;
+
+              return Stack(
+                children: [
+                  // Sliding indicator
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOutCubic,
+                    left: _selectedCategoryIndex * tabWidth + indicatorMargin,
+                    top: indicatorMargin,
+                    bottom: indicatorMargin,
+                    width: indicatorWidth,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: AppRadius.borderMd,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 2),
+                          ),
+                          BoxShadow(
+                            color: AppColors.tertiary.withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // Tab buttons
-                Row(
-                  children: List.generate(categories.length, (index) {
-                    final (category, _) = categories[index];
-                    final isSelected = index == _selectedCategoryIndex;
-                    return Expanded(
-                      child: GestureDetector(
+                  // Tab buttons
+                  Row(
+                    children: List.generate(categories.length, (index) {
+                      final (category, _) = categories[index];
+                      final isSelected = index == _selectedCategoryIndex;
+                      return _TabItem(
+                        category: category,
+                        isSelected: isSelected,
                         onTap: () => _onCategoryChanged(index),
-                        behavior: HitTestBehavior.opaque,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                category.icon,
-                                size: 18,
-                                color: isSelected ? Colors.white : AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    category.label,
-                                    style: AppFonts.labelLarge(
-                                      color: isSelected ? Colors.white : AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ],
-            );
-          },
+                      );
+                    }),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -419,18 +411,13 @@ class _CourseListPageState extends State<CourseListPage>
       builder: (context, constraints) {
         // Responsive cross axis count
         int crossAxisCount;
-        double childAspectRatio;
 
         if (isMobile) {
           crossAxisCount = 1;
-          childAspectRatio = availableWidth / 180;
         } else if (Responsive.isTablet(context)) {
           crossAxisCount = 2;
-          childAspectRatio = (availableWidth - 20) / 2 / 180;
         } else {
           crossAxisCount = (availableWidth / 380).floor().clamp(2, 4);
-          childAspectRatio = (availableWidth - 20 * (crossAxisCount - 1)) /
-              (crossAxisCount * 180);
         }
 
         return GridView.builder(
@@ -440,7 +427,7 @@ class _CourseListPageState extends State<CourseListPage>
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 20,
             mainAxisSpacing: 20,
-            childAspectRatio: childAspectRatio.clamp(1.5, 3.0),
+            mainAxisExtent: 280, // Fixed height for all cards
           ),
           itemCount: courses.length,
           itemBuilder: (context, index) {
@@ -717,6 +704,10 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
 
   @override
   Widget build(BuildContext context) {
+    // Calculate transform offset for hover/press state
+    final double translateY = _isHovered ? -4.0 : (_isPressed ? 2.0 : 0.0);
+    final double scale = _isPressed ? 0.98 : 1.0;
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) => setState(() => _isPressed = false),
@@ -732,8 +723,11 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOutCubic,
-          transform: Matrix4.translationValues(
-              0.0, _isHovered ? -4.0 : (_isPressed ? 2.0 : 0.0), 0.0),
+          constraints: const BoxConstraints(minHeight: 260),
+          transform: Matrix4.identity()
+            ..translateByDouble(0.0, translateY, 0.0, 1.0)
+            ..scaleByDouble(scale, scale, 1.0, 1.0),
+          transformAlignment: Alignment.center,
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16),
@@ -753,28 +747,34 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
               ),
             ],
           ),
-          child: AnimatedScale(
-            duration: const Duration(milliseconds: 150),
-            scale: _isPressed ? 0.98 : 1.0,
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildHeader(),
-                  const SizedBox(height: 16),
-                  Flexible(child: _buildContent()),
-                  if (widget.progress != null) ...[
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
                     const SizedBox(height: 16),
-                    _buildProgress(),
+                    _buildContent(),
                   ],
-                  if (widget.tags.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    _buildTags(),
-                  ],
+                ),
+                if (widget.progress != null || widget.tags.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (widget.progress != null) ...[
+                        _buildProgress(),
+                        if (widget.tags.isNotEmpty) const SizedBox(height: 12),
+                      ],
+                      if (widget.tags.isNotEmpty) _buildTags(),
+                    ],
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
         ),
@@ -812,6 +812,7 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
   Widget _buildContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           widget.title,
@@ -820,13 +821,11 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
-        Expanded(
-          child: Text(
-            widget.description,
-              style: AppFonts.bodyMedium(color: AppColors.textSecondary),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-          ),
+        Text(
+          widget.description,
+          style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -909,6 +908,88 @@ class _DifficultyBadgeWithPulse extends StatelessWidget {
     }
 
     return badge;
+  }
+}
+
+/// Tab item widget with proper hover handling
+class _TabItem extends StatefulWidget {
+  const _TabItem({
+    required this.category,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final CourseCategory category;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  State<_TabItem> createState() => _TabItemState();
+}
+
+class _TabItemState extends State<_TabItem> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // Determine text/icon color based on state
+    Color textColor;
+    Color iconColor;
+
+    if (widget.isSelected) {
+      textColor = Colors.white;
+      iconColor = Colors.white;
+    } else if (_isHovered) {
+      // Hovering over unselected tab - subtle highlight
+      textColor = AppColors.primaryLight;
+      iconColor = AppColors.primaryLight;
+    } else {
+      textColor = AppColors.textSecondary;
+      iconColor = AppColors.textSecondary;
+    }
+
+    return Expanded(
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    widget.category.icon,
+                    size: 18,
+                    color: iconColor,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      style: AppFonts.labelLarge(color: textColor).copyWith(
+                        fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                      child: Text(widget.category.label),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

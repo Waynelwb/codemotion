@@ -273,7 +273,6 @@ class _VisualizationPageState extends State<VisualizationPage>
   Widget build(BuildContext context) {
     final state = _notifier.state;
     final hp = Responsive.horizontalPadding(context);
-    final vp = Responsive.verticalPadding(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -284,9 +283,11 @@ class _VisualizationPageState extends State<VisualizationPage>
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: hp, vertical: 24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   _buildAlgorithmSelector(),
+                  SizedBox(height: Responsive.isMobile(context) ? 16 : 20),
+                  _buildRelatedCourse(),
                   SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
                   _buildVisualizationArea(state),
                   SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
@@ -386,7 +387,7 @@ class _VisualizationPageState extends State<VisualizationPage>
       padding: EdgeInsets.all(padding),
       decoration: AppDecorations.card(),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             '选择排序算法',
@@ -394,6 +395,7 @@ class _VisualizationPageState extends State<VisualizationPage>
           ),
           SizedBox(height: isMobile ? 12 : 16),
           Wrap(
+            alignment: WrapAlignment.center,
             spacing: isMobile ? 8 : 12,
             runSpacing: isMobile ? 8 : 12,
             children: SortingAlgorithm.values.map((algo) {
@@ -419,7 +421,7 @@ class _VisualizationPageState extends State<VisualizationPage>
                     ),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         algo.name,
@@ -452,6 +454,72 @@ class _VisualizationPageState extends State<VisualizationPage>
     );
   }
 
+  Widget _buildRelatedCourse() {
+    final isMobile = Responsive.isMobile(context);
+    final padding = isMobile ? 16.0 : 20.0;
+
+    return Container(
+      padding: EdgeInsets.all(padding),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.school, color: AppColors.warning, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '关联课程',
+                  style: AppFonts.labelMedium(color: AppColors.textTertiary),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '排序算法 · 查找算法',
+                  style: AppFonts.labelLarge(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () => globalNavigator.navigateToCourseDetail('algorithms_sorting'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '查看课程',
+                    style: AppFonts.labelMedium(color: AppColors.warning),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward, color: AppColors.warning, size: 14),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildVisualizationArea(VisualizationState state) {
     final isMobile = Responsive.isMobile(context);
     final padding = isMobile ? 16.0 : 32.0;
@@ -462,10 +530,11 @@ class _VisualizationPageState extends State<VisualizationPage>
       padding: EdgeInsets.all(padding),
       decoration: AppDecorations.card(),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (isMobile)
             Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   '可视化演示',
@@ -473,6 +542,7 @@ class _VisualizationPageState extends State<VisualizationPage>
                 ),
                 const SizedBox(height: 16),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
@@ -568,18 +638,18 @@ class _VisualizationPageState extends State<VisualizationPage>
   }
 
   Widget _buildLegend() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    final isMobile = Responsive.isMobile(context);
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: isMobile ? 12 : 24,
+      runSpacing: isMobile ? 8 : 0,
       children: [
         _legendItem(AppColors.vizDefault, '默认'),
-        const SizedBox(width: 24),
         _legendItem(AppColors.vizComparing, '比较中'),
-        const SizedBox(width: 24),
         _legendItem(AppColors.vizSwapping, '交换中'),
-        const SizedBox(width: 24),
         _legendItem(AppColors.vizPivot, '基准'),
-        const SizedBox(width: 24),
         _legendItem(AppColors.vizSorted, '已完成'),
+        _legendItem(AppColors.vizHighlight, '高亮'),
       ],
     );
   }
@@ -720,11 +790,12 @@ class _VisualizationPageState extends State<VisualizationPage>
     return Container(
       decoration: AppDecorations.card(),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Padding(
             padding: EdgeInsets.all(padding),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.code, color: AppColors.primary, size: 18),
                 const SizedBox(width: 8),
@@ -762,6 +833,7 @@ class _VisualizationPageState extends State<VisualizationPage>
       padding: EdgeInsets.all(padding),
       decoration: AppDecorations.card(),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           StepIndicator(
             currentStep: state.currentStepIndex + 1,
@@ -772,7 +844,7 @@ class _VisualizationPageState extends State<VisualizationPage>
             SizedBox(height: isMobile ? 12 : 16),
             if (isMobile)
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -810,6 +882,7 @@ class _VisualizationPageState extends State<VisualizationPage>
               )
             else
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -944,6 +1017,30 @@ void mergeSort(vector<int>& arr, int l, int r) {
         merge(arr, l, m, r);
     }
 }''';
+      case SortingAlgorithm.heapSort:
+        return '''void heapify(vector<int>& arr, int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+    if (left < n && arr[left] > arr[largest])
+        largest = left;
+    if (right < n && arr[right] > arr[largest])
+        largest = right;
+    if (largest != i) {
+        swap(arr[i], arr[largest]);
+        heapify(arr, n, largest);
+    }
+}
+
+void heapSort(vector<int>& arr) {
+    int n = arr.size();
+    for (int i = n / 2 - 1; i >= 0; i--)
+        heapify(arr, n, i);
+    for (int i = n - 1; i > 0; i--) {
+        swap(arr[0], arr[i]);
+        heapify(arr, i, 0);
+    }
+}''';
     }
   }
 }
@@ -1052,79 +1149,4 @@ class _ToastWidgetState extends State<_ToastWidget>
   }
 }
 
-// ========== SORT ARRAY BAR CHART WITH VALUE LABELS ==========
 
-class _SortArrayBarChart extends StatelessWidget {
-  const _SortArrayBarChart({required this.values, required this.states, this.comparingI, this.comparingJ, this.pivotIndex, required this.animationDuration});
-  final List<int> values;
-  final List<BarState> states;
-  final int? comparingI, comparingJ, pivotIndex;
-  final Duration animationDuration;
-
-  @override
-  Widget build(BuildContext context) {
-    final maxValue = values.isEmpty ? 1 : values.reduce((a, b) => a > b ? a : b);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: AppDecorations.codeBlock(),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: List.generate(values.length, (index) {
-          final state = index < states.length ? states[index] : BarState.defaultState;
-          final isComparing = index == comparingI || index == comparingJ;
-          final isPivot = index == pivotIndex;
-          return Padding(padding: const EdgeInsets.only(left: 4, right: 4),
-            child: _AnimatedSortBar(value: values[index], maxValue: maxValue, state: state, isComparing: isComparing, isPivot: isPivot, animationDuration: animationDuration));
-        }),
-      ),
-    );
-  }
-}
-
-class _AnimatedSortBar extends StatelessWidget {
-  const _AnimatedSortBar({required this.value, required this.maxValue, required this.state, required this.isComparing, required this.isPivot, required this.animationDuration});
-  final int value, maxValue;
-  final BarState state;
-  final bool isComparing, isPivot;
-  final Duration animationDuration;
-
-  @override
-  Widget build(BuildContext context) {
-    final heightFraction = maxValue > 0 ? value / maxValue : 0.0;
-    final barColor = _getBarColor();
-    return Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-      Text('$value', style: AppFonts.codeSmall(color: AppColors.textSecondary)),
-      const SizedBox(height: 4),
-      TweenAnimationBuilder<double>(
-        tween: Tween<double>(begin: 0, end: heightFraction),
-        duration: animationDuration, curve: Curves.easeInOut,
-        builder: (context, fraction, child) {
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 44,
-            height: fraction * 220 + 10,
-            decoration: BoxDecoration(
-              color: barColor, borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-              boxShadow: isComparing || state == BarState.swapping ? [BoxShadow(color: barColor.withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 2)] : null,
-            ),
-          );
-        }),
-    ]);
-  }
-
-  Color _getBarColor() {
-    if (isComparing) return AppColors.vizComparing;
-    if (isPivot || state == BarState.pivot) return AppColors.vizPivot;
-    switch (state) {
-      case BarState.defaultState: return AppColors.vizDefault;
-      case BarState.comparing: return AppColors.vizComparing;
-      case BarState.swapping: return AppColors.vizSwapping;
-      case BarState.sorted: return AppColors.vizSorted;
-      case BarState.pivot: return AppColors.vizPivot;
-      case BarState.highlighted: return AppColors.vizHighlight;
-    }
-  }
-}
-
-// ========== SEARCH ARRAY BAR CHART WITH POINTERS ==========

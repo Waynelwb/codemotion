@@ -7,6 +7,7 @@ const chapterVectors = CourseChapter(
   title: 'Vector 容器',
   description: '学习 C++ STL 中 vector 容器的使用，包括创建、添加元素、访问、遍历和迭代器操作。',
   difficulty: DifficultyLevel.beginner,
+  category: CourseCategory.stl,
   lessons: [
     CourseLesson(
       id: 'stl_vectors_basic',

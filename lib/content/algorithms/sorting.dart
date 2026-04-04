@@ -7,6 +7,7 @@ const chapterSortAlgorithms = CourseChapter(
   title: '排序算法',
   description: '学习各种排序算法，从基础的冒泡排序到高效的快速排序和归并排序。',
   difficulty: DifficultyLevel.intermediate,
+  category: CourseCategory.algorithms,
   lessons: [
     // Bubble Sort
     CourseLesson(

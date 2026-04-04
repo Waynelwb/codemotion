@@ -7,6 +7,7 @@ const chapterPolymorphism = CourseChapter(
   title: '多态',
   description: '学习 C++ 中的多态特性，包括虚函数、纯虚函数、抽象类和接口的实现。',
   difficulty: DifficultyLevel.intermediate,
+  category: CourseCategory.oop,
   lessons: [
     CourseLesson(
       id: 'oop_polymorphism_virtual',

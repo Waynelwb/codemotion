@@ -7,6 +7,7 @@ const chapterVariables = CourseChapter(
   title: '变量与数据类型',
   description: '学习 C++ 中的基本数据类型和变量声明，包括整型、浮点型、字符型、布尔型和字符串。',
   difficulty: DifficultyLevel.beginner,
+  category: CourseCategory.basics,
   lessons: [
     // Lesson 1: 基础数据类型
     CourseLesson(

@@ -48,37 +48,50 @@ class ArrayBar extends StatelessWidget {
     final heightFraction = value / maxValue;
     final barColor = _getBarColor();
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        if (showLabel && label != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text(
-              label!,
-              style: AppFonts.codeSmall(color: AppColors.textSecondary),
+    // Use LayoutBuilder to get available height constraints
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate available bar height (leaving room for label if shown)
+        final labelHeight = (showLabel && label != null) ? 20.0 : 0.0;
+        final availableHeight = constraints.maxHeight - labelHeight;
+        // Ensure bar height is at least 10 and at most available
+        final barHeight = (heightFraction * availableHeight.clamp(10.0, 200.0) + 10)
+            .clamp(10.0, availableHeight > 0 ? availableHeight : 210.0);
+
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (showLabel && label != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  label!,
+                  style: AppFonts.codeSmall(color: AppColors.textSecondary),
+                ),
+              ),
+            AnimatedContainer(
+              duration: animationDuration,
+              curve: Curves.easeInOut,
+              width: width,
+              height: barHeight,
+              decoration: BoxDecoration(
+                color: barColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                boxShadow: state == BarState.comparing || state == BarState.swapping
+                    ? [
+                        BoxShadow(
+                          color: barColor.withValues(alpha: 0.5),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : null,
+              ),
             ),
-          ),
-        AnimatedContainer(
-          duration: animationDuration,
-          curve: Curves.easeInOut,
-          width: width,
-          height: heightFraction * 200 + 10, // 最大高度 200
-          decoration: BoxDecoration(
-            color: barColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-            boxShadow: state == BarState.comparing || state == BarState.swapping
-                ? [
-                    BoxShadow(
-                      color: barColor.withValues(alpha: 0.5),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
-                  ]
-                : null,
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
@@ -125,34 +138,50 @@ class ArrayBarChart extends StatelessWidget {
         ? List.filled(values.length, BarState.defaultState)
         : states;
 
+    // Calculate total bar width including padding
+    const barSpacing = 4.0;
+    final totalBarsWidth = values.length * barWidth + (values.length - 1) * barSpacing;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: AppDecorations.codeBlock(),
       width: double.infinity,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: List.generate(values.length, (index) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: index == 0 ? 0 : 4,
-                right: index == values.length - 1 ? 0 : 4,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate horizontal padding to center bars
+          final availableWidth = constraints.maxWidth;
+          final horizontalPadding = availableWidth > totalBarsWidth
+              ? (availableWidth - totalBarsWidth) / 2
+              : 0.0;
+
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Padding(
+              padding: EdgeInsets.only(left: horizontalPadding.clamp(0.0, double.infinity)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(values.length, (index) {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      left: index == 0 ? 0 : barSpacing,
+                      right: index == values.length - 1 ? 0 : 0,
+                    ),
+                    child: ArrayBar(
+                      value: values[index],
+                      maxValue: effectiveMaxValue,
+                      state: effectiveStates[index],
+                      label: '${values[index]}',
+                      width: barWidth,
+                      showLabel: showLabels,
+                      animationDuration: animationDuration,
+                    ),
+                  );
+                }),
               ),
-              child: ArrayBar(
-                value: values[index],
-                maxValue: effectiveMaxValue,
-                state: effectiveStates[index],
-                label: '${values[index]}',
-                width: barWidth,
-                showLabel: showLabels,
-                animationDuration: animationDuration,
-              ),
-            );
-          }),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

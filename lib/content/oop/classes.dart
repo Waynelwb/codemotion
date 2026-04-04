@@ -7,6 +7,7 @@ const chapterClasses = CourseChapter(
   title: '类与对象',
   description: '学习 C++ 中面向对象编程的核心概念：类的定义、对象的创建、构造函数和成员函数。',
   difficulty: DifficultyLevel.beginner,
+  category: CourseCategory.oop,
   lessons: [
     CourseLesson(
       id: 'oop_classes_definition',

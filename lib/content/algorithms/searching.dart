@@ -254,6 +254,7 @@ const chapterSearchingAlgorithms = CourseChapter(
   title: '查找算法',
   description: '学习顺序查找和二分查找算法，理解查找效率的重要性。',
   difficulty: DifficultyLevel.beginner,
+  category: CourseCategory.algorithms,
   lessons: [
     CourseLesson(
       id: 'searching_sequential',

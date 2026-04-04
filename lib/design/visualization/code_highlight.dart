@@ -212,6 +212,24 @@ class _HighlightedLine extends StatelessWidget {
     final spans = <TextSpan>[];
     final words = line.split(RegExp(r'(\s+|(?=[{}();,]))'));
 
+    // 提取行首缩进
+    String leadingWhitespace = '';
+    for (final word in words) {
+      if (word.isEmpty) continue;
+      // 找到第一个非空 token，检查它前面是否有空白被吃掉了
+      final trimmedLine = line.trimLeft();
+      final leadingSpacesCount = line.length - trimmedLine.length;
+      if (leadingSpacesCount > 0) {
+        leadingWhitespace = line.substring(0, leadingSpacesCount);
+      }
+      break;
+    }
+
+    bool leadingAdded = leadingWhitespace.isEmpty;
+    if (!leadingAdded) {
+      spans.add(TextSpan(text: leadingWhitespace));
+    }
+
     for (final word in words) {
       if (word.isEmpty) continue;
 

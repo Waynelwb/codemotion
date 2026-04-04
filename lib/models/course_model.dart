@@ -1,8 +1,11 @@
-// Course Model - Course/Chapter/Lesson Data Models
-// Extracted common data structures from content files
+// Course Model - Course Overview / Learning Path Models
+// Course content data models are defined in course_data.dart
 
 import 'package:flutter/material.dart';
 import '../design/design_system.dart';
+
+// Re-export course content models from course_data.dart
+export '../content/course_data.dart' show DifficultyLevel, CodeExample, CourseLesson, CourseChapter;
 
 /// Course category for grouping courses
 enum CourseCategory {

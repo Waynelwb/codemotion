@@ -6,6 +6,8 @@ import 'basics/variables.dart';
 import 'basics/operators.dart';
 import 'basics/control_flow.dart';
 import 'basics/functions.dart';
+import 'basics/pointers.dart';
+import 'basics/references.dart';
 
 // 面向对象课程
 import 'oop/classes.dart';
@@ -22,6 +24,20 @@ import 'stl/algorithms.dart';
 // 算法可视化课程
 import 'algorithms/sorting.dart';
 import 'algorithms/searching.dart';
+import 'algorithms/advanced_sorting.dart';
+import 'algorithms/algorithm_ideas.dart';
+
+// 数据结构课程
+import 'data_structures/graphs.dart';
+import 'data_structures/stack.dart';
+import 'data_structures/queue.dart';
+import 'data_structures/linked_list.dart';
+import 'data_structures/binary_tree.dart';
+
+// 高级算法课程
+import 'advanced_algorithms/heap_sort.dart';
+import 'advanced_algorithms/dynamic_programming.dart';
+import 'advanced_algorithms/greedy_algorithm.dart';
 
 // Re-export all content
 export 'course_data.dart';
@@ -29,6 +45,8 @@ export 'basics/variables.dart';
 export 'basics/operators.dart';
 export 'basics/control_flow.dart';
 export 'basics/functions.dart';
+export 'basics/pointers.dart';
+export 'basics/references.dart';
 export 'oop/classes.dart';
 export 'oop/inheritance.dart';
 export 'oop/polymorphism.dart';
@@ -39,6 +57,16 @@ export 'stl/sets.dart';
 export 'stl/algorithms.dart';
 export 'algorithms/sorting.dart';
 export 'algorithms/searching.dart';
+export 'algorithms/advanced_sorting.dart';
+export 'algorithms/algorithm_ideas.dart';
+export 'data_structures/graphs.dart';
+export 'data_structures/stack.dart';
+export 'data_structures/queue.dart';
+export 'data_structures/linked_list.dart';
+export 'data_structures/binary_tree.dart';
+export 'advanced_algorithms/heap_sort.dart';
+export 'advanced_algorithms/dynamic_programming.dart';
+export 'advanced_algorithms/greedy_algorithm.dart';
 
 /// 所有课程章节列表
 final List<CourseChapter> allChapters = [
@@ -47,6 +75,8 @@ final List<CourseChapter> allChapters = [
   chapterOperators,
   chapterControlFlow,
   chapterFunctions,
+  chapterPointers,
+  chapterReferences,
 
   // 面向对象课程
   chapterClasses,
@@ -63,6 +93,22 @@ final List<CourseChapter> allChapters = [
   // 算法可视化课程
   chapterSortAlgorithms,
   chapterSearchingAlgorithms,
+
+  // 高级排序与算法思想
+  chapterAdvancedSorting,
+  chapterAlgorithmStrategies,
+
+  // 数据结构课程
+  chapterGraphDataStructure,
+  chapterStack,
+  chapterQueue,
+  chapterLinkedList,
+  chapterBinaryTree,
+
+  // 高级算法课程
+  chapterHeapSort,
+  chapterDynamicProgramming,
+  chapterGreedyAlgorithm,
 ];
 
 /// 按难度分组的课程章节

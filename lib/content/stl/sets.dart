@@ -7,6 +7,7 @@ const chapterSets = CourseChapter(
   title: 'Set 容器',
   description: '学习 C++ STL 中 set 和 unordered_set 的使用，包括去重、查找和集合运算。',
   difficulty: DifficultyLevel.intermediate,
+  category: CourseCategory.stl,
   lessons: [
     CourseLesson(
       id: 'stl_sets_basic',

@@ -40,12 +40,24 @@ class CourseLesson {
   });
 }
 
+/// 课程章节分类
+enum CourseCategory {
+  basics('基础语法'),
+  oop('面向对象'),
+  stl('STL 容器与算法'),
+  algorithms('算法进阶');
+
+  const CourseCategory(this.label);
+  final String label;
+}
+
 /// 课程章节
 class CourseChapter {
   final String id;
   final String title;
   final String description;
   final DifficultyLevel difficulty;
+  final CourseCategory category;
   final List<CourseLesson> lessons;
 
   const CourseChapter({
@@ -53,6 +65,7 @@ class CourseChapter {
     required this.title,
     required this.description,
     required this.difficulty,
+    required this.category,
     required this.lessons,
   });
 }

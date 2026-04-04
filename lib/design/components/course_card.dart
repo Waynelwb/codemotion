@@ -64,7 +64,7 @@ class _CourseCardState extends State<CourseCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
-          constraints: const BoxConstraints(minHeight: 160),
+          constraints: const BoxConstraints(minHeight: 200),
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(AppRadius.lg),

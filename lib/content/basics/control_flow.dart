@@ -7,6 +7,7 @@ const chapterControlFlow = CourseChapter(
   title: '控制流',
   description: '学习 C++ 中的条件语句和循环结构，包括 if/else、switch、for、while 和 do-while。',
   difficulty: DifficultyLevel.beginner,
+  category: CourseCategory.basics,
   lessons: [
     CourseLesson(
       id: 'basics_control_flow_conditional',

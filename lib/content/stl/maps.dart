@@ -7,6 +7,7 @@ const chapterMaps = CourseChapter(
   title: 'Map 容器',
   description: '学习 C++ STL 中 map 和 unordered_map 的使用，包括键值对操作、查找、遍历和性能特点。',
   difficulty: DifficultyLevel.intermediate,
+  category: CourseCategory.stl,
   lessons: [
     CourseLesson(
       id: 'stl_maps_basic',

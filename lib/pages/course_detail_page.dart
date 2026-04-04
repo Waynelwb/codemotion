@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:markdown/markdown.dart' as md;
 import '../design/design_system.dart';
 import '../design/responsive.dart';
 import '../design/visualization/code_highlight.dart';
@@ -362,7 +364,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: filteredLessons.length,
-            separatorBuilder: (_, _2) => const SizedBox(height: 12),
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final lesson = filteredLessons[index];
               return _LessonCard(
@@ -713,69 +715,64 @@ class _LessonCardState extends State<_LessonCard>
   }
 
   Widget _buildMarkdownContent(String content) {
-    // Simple markdown-like rendering
-    final lines = content.split('\n');
-    final widgets = <Widget>[];
-    
-    for (final line in lines) {
-      if (line.startsWith('# ')) {
-        widgets.add(Padding(
-          padding: const EdgeInsets.only(bottom: 8, top: 16),
-          child: Text(
-            line.substring(2),
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+    // Use flutter_markdown_plus for proper markdown rendering
+    return Markdown(
+      data: content,
+      styleSheet: MarkdownStyleSheet(
+        h1: GoogleFonts.spaceGrotesk(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        h2: GoogleFonts.spaceGrotesk(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        h3: GoogleFonts.spaceGrotesk(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        p: AppFonts.bodyMedium(color: AppColors.textSecondary),
+        a: AppFonts.bodyMedium(color: AppColors.primary),
+        strong: AppFonts.bodyMedium(color: Colors.white).copyWith(fontWeight: FontWeight.bold),
+        em: AppFonts.bodyMedium(color: AppColors.textSecondary).copyWith(fontStyle: FontStyle.italic),
+        blockquote: AppFonts.bodyMedium(color: AppColors.textSecondary),
+        blockquoteDecoration: BoxDecoration(
+          color: AppColors.surfaceElevated,
+          border: Border(
+            left: BorderSide(
+              color: AppColors.primary,
+              width: 4,
             ),
           ),
-        ));
-      } else if (line.startsWith('## ')) {
-        widgets.add(Padding(
-          padding: const EdgeInsets.only(bottom: 6, top: 12),
-          child: Text(
-            line.substring(3),
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-        ));
-      } else if (line.startsWith('```')) {
-        // Skip code block markers, handled separately
-      } else if (line.startsWith('- ')) {
-        widgets.add(Padding(
-          padding: const EdgeInsets.only(left: 16, bottom: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('• ', style: AppFonts.bodyMedium(color: AppColors.primary)),
-              Expanded(
-                child: Text(
-                  line.substring(2),
-                  style: AppFonts.bodyMedium(color: AppColors.textSecondary),
-                ),
-              ),
-            ],
-          ),
-        ));
-      } else if (line.trim().isEmpty) {
-        widgets.add(const SizedBox(height: 8));
-      } else {
-        widgets.add(Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: Text(
-            line,
-            style: AppFonts.bodyMedium(color: AppColors.textSecondary),
-          ),
-        ));
-      }
-    }
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: widgets,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        code: AppFonts.codeMedium(color: AppColors.textPrimary),
+        codeblockPadding: const EdgeInsets.all(12),
+        codeblockDecoration: BoxDecoration(
+          color: AppColors.codeBackground,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        listBullet: AppFonts.bodyMedium(color: AppColors.primary),
+        listBulletPadding: const EdgeInsets.only(right: 8),
+        tableHead: AppFonts.bodyMedium(color: Colors.white).copyWith(fontWeight: FontWeight.bold),
+        tableBody: AppFonts.bodyMedium(color: AppColors.textSecondary),
+        tableBorder: TableBorder.all(
+          color: AppColors.border,
+          width: 1,
+        ),
+        tableCellsPadding: const EdgeInsets.all(8),
+        tableCellsDecoration: BoxDecoration(
+          color: AppColors.surfaceElevated,
+        ),
+      ),
+      builders: {
+        'code': CodeElementBuilder(),
+      },
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
     );
   }
 
@@ -921,6 +918,73 @@ class _CodeExampleCard extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Custom builder for code blocks in markdown
+class CodeElementBuilder extends MarkdownElementBuilder {
+  @override
+  Widget? visitElementAfterWithContext(
+    BuildContext context,
+    md.Element element,
+    TextStyle? preferredStyle,
+    TextStyle? parentStyle,
+  ) {
+    final code = element.textContent;
+    if (code.isEmpty) return null;
+
+    // Try to detect language from class attribute
+    String language = 'text';
+    final attributes = element.attributes;
+    if (attributes.containsKey('class')) {
+      final classValue = attributes['class']!;
+      // Extract language from class like "language-dart"
+      if (classValue.startsWith('language-')) {
+        language = classValue.substring(9);
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.codeBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with language indicator
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.code, color: AppColors.primary, size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  language.toUpperCase(),
+                  style: AppFonts.labelMedium(color: AppColors.textTertiary),
+                ),
+              ],
+            ),
+          ),
+          // Code content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: CodeHighlight(
+              code: code,
+              language: language,
+              showLineNumbers: true,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );

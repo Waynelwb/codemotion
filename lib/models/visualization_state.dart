@@ -123,9 +123,14 @@ class VisualizationNotifier {
   void _advanceStep() {
     final nextIndex = _state.currentStepIndex + 1;
     if (nextIndex >= _state.steps.length) {
+      // At the end, show the final step's state
+      final lastStep = _state.steps.isNotEmpty ? _state.steps.last : null;
       _state = _state.copyWith(
         status: VisualizationStatus.completed,
         currentStepIndex: _state.steps.length - 1,
+        currentArray: lastStep?.arrayState ?? _state.currentArray,
+        barStates: lastStep?.barStates ?? _state.barStates,
+        currentStep: lastStep,
       );
       return;
     }
@@ -165,7 +170,14 @@ class VisualizationNotifier {
   bool tick() {
     if (!_state.isPlaying) return false;
     if (_state.currentStepIndex >= _state.steps.length - 1) {
-      _state = _state.copyWith(status: VisualizationStatus.completed);
+      // Already at last step, just mark as completed
+      final lastStep = _state.steps.isNotEmpty ? _state.steps.last : null;
+      _state = _state.copyWith(
+        status: VisualizationStatus.completed,
+        currentArray: lastStep?.arrayState ?? _state.currentArray,
+        barStates: lastStep?.barStates ?? _state.barStates,
+        currentStep: lastStep,
+      );
       return false;
     }
     _advanceStep();
