@@ -98,6 +98,40 @@ int main() {
         '时间复杂度 O(n²)，适合小规模数据',
         '稳定排序，相等元素保持原有顺序',
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：优化冒泡排序',
+          code: '''// 给定一个数组，使用冒泡排序将其升序排列
+// 要求：添加提前终止优化（如果某轮没有交换则停止）
+#include <iostream>
+#include <vector>
+using namespace std;
+
+void bubbleSort(vector<int>& arr) {
+    // 在这里补充代码
+}
+
+int main() {
+    vector<int> arr = {5, 2, 9, 1, 5, 6};
+    bubbleSort(arr);
+    for (int x : arr) cout << x << " ";
+    // 期望输出: 1 2 5 5 6 9
+}''',
+          description: '实现带优化策略的冒泡排序。',
+          output: '1 2 5 5 6 9',
+        ),
+        CodeExample(
+          title: '思考：冒泡排序的稳定性',
+          code: '''// 什么情况下冒泡排序会变得不稳定？
+// 尝试用以下数据测试：
+vector<pair<int, string>> arr = {
+    {1, "A"}, {2, "B"}, {1, "C"}, {3, "D"}
+};
+// 使用标准冒泡排序（使用 > 比较）排序后，
+// 两个 {1, ?} 元素的相对顺序是否保持？''',
+          description: '分析冒泡排序的稳定性条件。',
+        ),
+      ],
     ),
 
     // Selection Sort
@@ -183,6 +217,40 @@ int main() {
         '不稳定排序',
         '时间复杂度恒为 O(n²)',
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：双向选择排序',
+          code: '''// 改进选择排序：每轮同时找出最小和最大元素
+// 这样可以将比较次数减少约一半
+void doubleSelectSort(vector<int>& arr) {
+    int left = 0, right = arr.size() - 1;
+    while (left < right) {
+        int minIdx = left, maxIdx = left;
+        for (int i = left; i <= right; i++) {
+            if (arr[i] < arr[minIdx]) minIdx = i;
+            if (arr[i] > arr[maxIdx]) maxIdx = i;
+        }
+        // 交换最小元素到 left，交换最大元素到 right
+        // 补充代码...
+        left++;
+        right--;
+    }
+}''',
+          description: '实现双向选择排序，每轮同时找到最小值和最大值。',
+          output: '',
+        ),
+        CodeExample(
+          title: '分析：选择排序 vs 冒泡排序',
+          code: '''// 比较两种排序的交换次数
+// 选择排序：最多 n-1 次交换
+// 冒泡排序：最多 n*(n-1)/2 次交换（每次比较都可能交换）
+
+// 给定数组 {64, 25, 12, 22, 11}，
+// 选择排序会交换多少次？
+// 冒泡排序会交换多少次？''',
+          description: '分析两种排序的交换次数差异。',
+        ),
+      ],
     ),
 
     // Insertion Sort
@@ -267,6 +335,38 @@ int main() {
         '对基本有序数据接近 O(n)',
         '稳定排序',
         '适合小规模或基本有序的数据',
+      ],
+      exercises: [
+        CodeExample(
+          title: '练习：二分插入排序',
+          code: '''// 使用二分查找找到插入位置，减少比较次数
+// 注意：找到位置后仍需要移动元素
+void binaryInsertionSort(vector<int>& arr) {
+    for (int i = 1; i < arr.size(); i++) {
+        int key = arr[i];
+        int pos = binarySearch(arr, 0, i - 1, key);
+        // 将 arr[pos..i-1] 整体向后移动一位
+        for (int j = i; j > pos; j--) arr[j] = arr[j - 1];
+        arr[pos] = key;
+    }
+}
+
+int binarySearch(vector<int>& arr, int left, int right, int key) {
+    // 补充二分查找代码，返回 key 应插入的位置
+}''',
+          description: '结合二分查找优化插入排序的比较次数。',
+          output: '',
+        ),
+        CodeExample(
+          title: '应用：链表插入排序',
+          code: '''// 为什么插入排序特别适合链表？
+// 原因：插入时不需要像数组那样移动元素，
+// 只需要修改指针，时间复杂度仍然是 O(n²)
+//
+// 对链表 {4->2->1->3} 进行插入排序，
+// 写出每轮处理后的链表状态''',
+          description: '分析插入排序在链表上的优势。',
+        ),
       ],
     ),
 
@@ -363,6 +463,36 @@ int main() {
         '不稳定排序',
         '不适合已逆向排序的数据（可随机化基准优化）',
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：三数取中基准快速排序',
+          code: '''// 为解决最坏情况，改进基准选择策略：
+// 取 left、mid、right 三个位置的中位数作为基准
+int medianOfThree(vector<int>& arr, int left, int right) {
+    int mid = left + (right - left) / 2;
+    // 比较 arr[left], arr[mid], arr[right]
+    // 返回中位数的索引
+}
+
+int partition(vector<int>& arr, int low, int high) {
+    // 使用 medianOfThree 选择基准，并将其移到末尾
+    // 然后执行标准分区
+}''',
+          description: '实现三数取中法选择基准，避免最坏情况。',
+          output: '',
+        ),
+        CodeExample(
+          title: '分析：快速排序的递归栈深度',
+          code: '''// 快速排序递归深度最坏为 O(n)，最好为 O(log n)
+//
+// 思考：对于数组 {1,2,3,4,5,6,7,8,9,10}，
+// 如果每次选择第一个元素作为基准，
+// 递归深度是多少？
+//
+// 如何优化？''',
+          description: '分析递归深度对快速排序性能的影响。',
+        ),
+      ],
     ),
 
     // Merge Sort
@@ -455,6 +585,39 @@ int main() {
         '时间复杂度稳定 O(n log n)',
         '稳定排序',
         '需要额外 O(n) 空间，不是原地排序',
+      ],
+      exercises: [
+        CodeExample(
+          title: '练习：自底向上的归并排序',
+          code: '''// 自底向上版本，不使用递归
+// 先将每 2 个元素合并，再将每 4 个元素合并...
+void bottomUpMergeSort(vector<int>& arr) {
+    int n = arr.size();
+    for (int width = 1; width < n; width *= 2) {
+        // width: 当前合并的子数组大小
+        for (int i = 0; i < n; i += 2 * width) {
+            // 合并 arr[i..i+2*width-1]
+            int left = i;
+            int mid = min(i + width, n);
+            int right = min(i + 2 * width, n);
+            merge(arr, left, mid - 1, right - 1);
+        }
+    }
+}''',
+          description: '实现非递归的归并排序，自底向上合并子数组。',
+          output: '',
+        ),
+        CodeExample(
+          title: '分析：归并排序 vs 快速排序',
+          code: '''// 对比两种排序的特点：
+//
+//            | 最好     | 平均     | 最坏     | 空间   | 稳定性
+// 快速排序   | O(nlogn) | O(nlogn) | O(n²)   | O(logn)| 不稳定
+// 归并排序   | O(nlogn) | O(nlogn) | O(nlogn)| O(n)   | 稳定
+//
+// 什么时候选择归并排序而不是快速排序？''',
+          description: '对比两种排序的适用场景。',
+        ),
       ],
     ),
   ],

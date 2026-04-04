@@ -448,7 +448,11 @@ class _CourseListPageState extends State<CourseListPage>
                   Navigator.of(context).push(
                     PageRouteBuilder(
                       pageBuilder: (context, animation, secondaryAnimation) {
-                        return _CourseDetailPageWrapper(courseId: course.id);
+                        return _CourseDetailPageWrapper(
+                          courseId: course.id,
+                          heroIcon: course.icon,
+                          heroTitle: course.title,
+                        );
                       },
                       transitionsBuilder: (context, animation, secondaryAnimation, child) {
                         return FadeTransition(
@@ -789,17 +793,20 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
   Widget _buildHeader() {
     return Row(
       children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: _isHovered ? 0.25 : 0.15),
-            borderRadius: AppRadius.borderMd,
-          ),
-          child: Icon(
-            widget.icon,
-            color: AppColors.primary,
-            size: 24,
+        Hero(
+          tag: 'course-hero-${widget.title}',
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: _isHovered ? 0.25 : 0.15),
+              borderRadius: AppRadius.borderMd,
+            ),
+            child: Icon(
+              widget.icon,
+              color: AppColors.primary,
+              size: 24,
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -1020,12 +1027,22 @@ class _TagChip extends StatelessWidget {
 
 /// Wrapper for CourseDetailPage to handle navigation
 class _CourseDetailPageWrapper extends StatelessWidget {
-  const _CourseDetailPageWrapper({required this.courseId});
+  const _CourseDetailPageWrapper({
+    required this.courseId,
+    required this.heroIcon,
+    required this.heroTitle,
+  });
 
   final String courseId;
+  final IconData heroIcon;
+  final String heroTitle;
 
   @override
   Widget build(BuildContext context) {
-    return CourseDetailPage(courseId: courseId);
+    return CourseDetailPage(
+      courseId: courseId,
+      heroIcon: heroIcon,
+      heroTitle: heroTitle,
+    );
   }
 }

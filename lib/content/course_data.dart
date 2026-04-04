@@ -30,6 +30,7 @@ class CourseLesson {
   final String content;           // Markdown 格式的理论内容
   final List<CodeExample> codeExamples;  // 代码示例
   final List<String> keyPoints;   // 关键知识点
+  final List<CodeExample> exercises;     // 练习题
 
   const CourseLesson({
     required this.id,
@@ -37,6 +38,7 @@ class CourseLesson {
     required this.content,
     required this.codeExamples,
     required this.keyPoints,
+    this.exercises = const [],
   });
 }
 

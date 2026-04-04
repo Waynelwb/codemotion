@@ -13,9 +13,13 @@ class CourseDetailPage extends StatefulWidget {
   const CourseDetailPage({
     super.key,
     required this.courseId,
+    this.heroIcon,
+    this.heroTitle,
   });
 
   final String courseId;
+  final IconData? heroIcon;
+  final String? heroTitle;
 
   @override
   State<CourseDetailPage> createState() => _CourseDetailPageState();
@@ -252,7 +256,7 @@ class _CourseDetailPageState extends State<CourseDetailPage>
 
   Widget _buildCourseHeader(CourseChapter chapter, double hp) {
     final difficultyColor = _getDifficultyColor(chapter.difficulty);
-    
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: hp, vertical: 24),
       padding: const EdgeInsets.all(24),
@@ -268,64 +272,94 @@ class _CourseDetailPageState extends State<CourseDetailPage>
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: difficultyColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: difficultyColor.withValues(alpha: 0.3)),
+          // Hero icon
+          Hero(
+            tag: widget.heroTitle != null
+                ? 'course-hero-${widget.heroTitle}'
+                : 'course-hero-${chapter.title}',
+            child: Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+              ),
+              child: Icon(
+                widget.heroIcon ?? Icons.code,
+                color: AppColors.primary,
+                size: 36,
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Icon(
-                      _getDifficultyIcon(chapter.difficulty),
-                      color: difficultyColor,
-                      size: 14,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: difficultyColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: difficultyColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getDifficultyIcon(chapter.difficulty),
+                            color: difficultyColor,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _getDifficultyLabel(chapter.difficulty),
+                            style: AppFonts.labelMedium(color: difficultyColor),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _getDifficultyLabel(chapter.difficulty),
-                      style: AppFonts.labelMedium(color: difficultyColor),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${chapter.lessons.length} 课时',
+                        style: AppFonts.labelMedium(color: AppColors.primary),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 16),
+                Text(
+                  chapter.title,
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: Responsive.isMobile(context) ? 24 : 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-                child: Text(
-                  '${chapter.lessons.length} 课时',
-                  style: AppFonts.labelMedium(color: AppColors.primary),
+                const SizedBox(height: 12),
+                Text(
+                  chapter.description,
+                  style: AppFonts.bodyLarge(color: AppColors.textSecondary),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            chapter.title,
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: Responsive.isMobile(context) ? 24 : 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+                const SizedBox(height: 20),
+                _buildProgressBar(chapter),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-          Text(
-            chapter.description,
-            style: AppFonts.bodyLarge(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 20),
-          _buildProgressBar(chapter),
         ],
       ),
     );
@@ -707,6 +741,19 @@ class _LessonCardState extends State<_LessonCard>
                                 '${widget.lesson.codeExamples.length} 个代码示例',
                                 style: AppFonts.labelMedium(color: AppColors.textTertiary),
                               ),
+                              if (widget.lesson.exercises.isNotEmpty) ...[
+                                const SizedBox(width: 12),
+                                Icon(
+                                  Icons.edit_note,
+                                  size: 14,
+                                  color: AppColors.warning,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${widget.lesson.exercises.length} 道练习',
+                                  style: AppFonts.labelMedium(color: AppColors.warning),
+                                ),
+                              ],
                               const SizedBox(width: 12),
                               Icon(
                                 Icons.lightbulb_outline,
@@ -773,6 +820,63 @@ class _LessonCardState extends State<_LessonCard>
             ...widget.lesson.codeExamples.map((example) => Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: _CodeExampleCard(example: example),
+            )),
+          ],
+          // Practice exercises
+          if (widget.lesson.exercises.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.edit_note, color: AppColors.warning, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '练习题',
+                          style: AppFonts.titleMedium(color: AppColors.warning),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '巩固所学知识，动手实践',
+                          style: AppFonts.bodySmall(color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${widget.lesson.exercises.length}',
+                      style: AppFonts.labelMedium(color: AppColors.warning),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...widget.lesson.exercises.map((exercise) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _ExerciseCard(example: exercise),
             )),
           ],
         ],
@@ -964,6 +1068,113 @@ class _CodeExampleCard extends StatelessWidget {
                               Text(
                                 '输出结果',
                                 style: AppFonts.labelMedium(color: AppColors.textTertiary),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            example.output!,
+                            style: GoogleFonts.firaCode(
+                              fontSize: 12,
+                              color: AppColors.success,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Exercise card - similar to CodeExampleCard but with orange/warning accent
+class _ExerciseCard extends StatelessWidget {
+  const _ExerciseCard({required this.example});
+
+  final CodeExample example;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.codeBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with exercise icon
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.15),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.edit_note, color: AppColors.warning, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    example.title,
+                    style: AppFonts.labelLarge(color: AppColors.warning),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Code block
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: CodeHighlight(
+              code: example.code,
+              language: 'cpp',
+              showLineNumbers: true,
+              fontSize: 13,
+            ),
+          ),
+          // Description and expected output
+          if (example.description.isNotEmpty || example.output != null) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (example.description.isNotEmpty) ...[
+                    Text(
+                      example.description,
+                      style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  if (example.output != null && example.output!.isNotEmpty) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.check_circle_outline,
+                                  color: AppColors.warning, size: 14),
+                              const SizedBox(width: 6),
+                              Text(
+                                '期望输出',
+                                style: AppFonts.labelMedium(
+                                    color: AppColors.textTertiary),
                               ),
                             ],
                           ),
