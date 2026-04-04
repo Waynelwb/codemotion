@@ -725,8 +725,12 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
           curve: Curves.easeOutCubic,
           constraints: const BoxConstraints(minHeight: 260),
           transform: Matrix4.identity()
-            ..translateByDouble(0.0, translateY, 0.0, 1.0)
-            ..scaleByDouble(scale, scale, 1.0, 1.0),
+            ..setEntry(0, 3, 0.0)
+            ..setEntry(1, 3, translateY)
+            ..setEntry(2, 3, 0.0)
+            ..setEntry(0, 0, scale)
+            ..setEntry(1, 1, scale)
+            ..setEntry(2, 2, 1.0),
           transformAlignment: Alignment.center,
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
