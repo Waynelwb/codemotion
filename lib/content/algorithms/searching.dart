@@ -21,6 +21,8 @@ class SearchStep {
   final String description;
   final int codeLine;
   final int? target;
+  /// Animation duration in milliseconds, defaults to 300ms
+  final int animationDurationMs;
 
   const SearchStep({
     required this.arrayState,
@@ -33,6 +35,7 @@ class SearchStep {
     required this.description,
     required this.codeLine,
     this.target,
+    this.animationDurationMs = 300,
   });
 }
 
@@ -71,6 +74,7 @@ List<SearchStep> generateSequentialSearch(List<int> arr, int target) {
     description: '开始顺序查找，目标值: $target',
     codeLine: 1,
     target: target,
+    animationDurationMs: 400,
   ));
 
   for (int i = 0; i < arr.length; i++) {
@@ -84,6 +88,7 @@ List<SearchStep> generateSequentialSearch(List<int> arr, int target) {
       description: '比较 arr[$i]=${arr[i]} 与目标值 $target',
       codeLine: 3,
       target: target,
+      animationDurationMs: 200,
     ));
 
     if (arr[i] == target) {
@@ -97,6 +102,7 @@ List<SearchStep> generateSequentialSearch(List<int> arr, int target) {
         description: '找到目标！arr[$i]=${arr[i]} == $target',
         codeLine: 4,
         target: target,
+        animationDurationMs: 600,
       ));
       return steps;
     }
@@ -110,6 +116,7 @@ List<SearchStep> generateSequentialSearch(List<int> arr, int target) {
       description: 'arr[$i]=${arr[i]} != $target，继续查找',
       codeLine: 6,
       target: target,
+      animationDurationMs: 150,
     ));
   }
 
@@ -120,6 +127,7 @@ List<SearchStep> generateSequentialSearch(List<int> arr, int target) {
     description: '未找到目标值 $target',
     codeLine: 7,
     target: target,
+    animationDurationMs: 400,
   ));
   return steps;
 }
@@ -137,6 +145,7 @@ List<SearchStep> generateBinarySearch(List<int> arr, int target) {
     description: '开始二分查找，目标值: $target（数组已排序）',
     codeLine: 1,
     target: target,
+    animationDurationMs: 400,
   ));
 
   int left = 0, right = sortedArr.length - 1;
@@ -154,6 +163,7 @@ List<SearchStep> generateBinarySearch(List<int> arr, int target) {
       description: '设置查找区间: left=$left, right=$right',
       codeLine: 3,
       target: target,
+      animationDurationMs: 300,
     ));
 
     final mid = left + (right - left) ~/ 2;
@@ -169,6 +179,7 @@ List<SearchStep> generateBinarySearch(List<int> arr, int target) {
       description: '计算中间位置: mid=$mid, arr[$mid]=${sortedArr[mid]}',
       codeLine: 4,
       target: target,
+      animationDurationMs: 250,
     ));
 
     midStates[mid] = SearchBarState.comparing;
@@ -182,6 +193,7 @@ List<SearchStep> generateBinarySearch(List<int> arr, int target) {
       description: '比较 arr[$mid]=${sortedArr[mid]} 与目标值 $target',
       codeLine: 5,
       target: target,
+      animationDurationMs: 200,
     ));
 
     if (sortedArr[mid] == target) {
@@ -200,6 +212,7 @@ List<SearchStep> generateBinarySearch(List<int> arr, int target) {
         description: '找到目标！arr[$mid]=${sortedArr[mid]} == $target',
         codeLine: 6,
         target: target,
+        animationDurationMs: 600,
       ));
       return steps;
     } else if (sortedArr[mid] < target) {
@@ -216,6 +229,7 @@ List<SearchStep> generateBinarySearch(List<int> arr, int target) {
         description: 'arr[$mid]=${sortedArr[mid]} < $target，排除左半区，搜索右半区',
         codeLine: 8,
         target: target,
+        animationDurationMs: 200,
       ));
       left = mid + 1;
     } else {
@@ -232,6 +246,7 @@ List<SearchStep> generateBinarySearch(List<int> arr, int target) {
         description: 'arr[$mid]=${sortedArr[mid]} > $target，排除右半区，搜索左半区',
         codeLine: 10,
         target: target,
+        animationDurationMs: 200,
       ));
       right = mid - 1;
     }
@@ -244,6 +259,7 @@ List<SearchStep> generateBinarySearch(List<int> arr, int target) {
     description: '未找到目标值 $target (left=$left > right=$right)',
     codeLine: 12,
     target: target,
+    animationDurationMs: 400,
   ));
   return steps;
 }

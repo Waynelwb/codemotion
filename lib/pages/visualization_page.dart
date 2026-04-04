@@ -1158,6 +1158,7 @@ class _VisualizationPageState extends State<VisualizationPage>
 
   Widget _buildSearchChart(double chartHeight, double barWidth) {
     final state = _searchNotifier.state;
+    final stepDuration = state.currentStep?.animationDurationMs ?? 200;
     return SizedBox(
       height: chartHeight,
       child: SearchBarChart(
@@ -1165,6 +1166,7 @@ class _VisualizationPageState extends State<VisualizationPage>
         barStates: state.barStates,
         barWidth: barWidth,
         showLabels: true,
+        animationDuration: Duration(milliseconds: stepDuration),
         leftIndex: state.leftIndex,
         rightIndex: state.rightIndex,
         midIndex: state.midIndex,

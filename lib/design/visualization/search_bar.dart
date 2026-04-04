@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 import '../design_system.dart';
 import '../../content/algorithms/searching.dart';
 
-class SearchBar extends StatelessWidget {
+class SearchBar extends StatefulWidget {
   const SearchBar({
     super.key,
     required this.value,
@@ -41,13 +41,57 @@ class SearchBar extends StatelessWidget {
   final Duration animationDuration;
 
   @override
+  State<SearchBar> createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<SearchBar> with SingleTickerProviderStateMixin {
+  late AnimationController _bounceController;
+  late Animation<double> _bounceAnimation;
+  SearchBarState? _previousState;
+
+  @override
+  void initState() {
+    super.initState();
+    _bounceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _bounceAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.15), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.15, end: 0.92), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.92, end: 1.05), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.05, end: 1.0), weight: 1),
+    ]).animate(CurvedAnimation(
+      parent: _bounceController,
+      curve: Curves.easeOut,
+    ));
+  }
+
+  @override
+  void didUpdateWidget(SearchBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Trigger bounce animation when found state is reached
+    if (widget.state == SearchBarState.found &&
+        _previousState != SearchBarState.found) {
+      _bounceController.forward(from: 0);
+    }
+    _previousState = widget.state;
+  }
+
+  @override
+  void dispose() {
+    _bounceController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final heightFraction = value / maxValue;
+    final heightFraction = widget.value / widget.maxValue;
     final barColor = _getBarColor();
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final labelHeight = (showLabel && label != null) ? 24.0 : 0.0;
+        final labelHeight = (widget.showLabel && widget.label != null) ? 24.0 : 0.0;
         final availableHeight = constraints.maxHeight - labelHeight;
         final barHeight = (heightFraction * availableHeight.clamp(10.0, 180.0) + 10)
             .clamp(10.0, availableHeight > 0 ? availableHeight : 210.0);
@@ -57,37 +101,47 @@ class SearchBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Pointer indicators
-            if (isLeftPointer || isRightPointer || isMidPointer)
+            if (widget.isLeftPointer || widget.isRightPointer || widget.isMidPointer)
               _buildPointerIndicator(),
-            if (showLabel && label != null)
+            if (widget.showLabel && widget.label != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
-                  label!,
+                  widget.label!,
                   style: AppFonts.codeSmall(
                     color: _getLabelColor(),
                   ),
                 ),
               ),
-            AnimatedContainer(
-              duration: animationDuration,
-              curve: Curves.easeInOut,
-              width: width,
-              height: barHeight,
-              decoration: BoxDecoration(
-                color: barColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                boxShadow: state == SearchBarState.comparing ||
-                        state == SearchBarState.current
-                    ? [
-                        BoxShadow(
-                          color: barColor.withValues(alpha: 0.5),
-                          blurRadius: 8,
-                          spreadRadius: 2,
-                        ),
-                      ]
-                    : null,
-              ),
+            AnimatedBuilder(
+              animation: _bounceAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: widget.state == SearchBarState.found
+                      ? _bounceAnimation.value
+                      : 1.0,
+                  child: AnimatedContainer(
+                    duration: widget.animationDuration,
+                    curve: Curves.easeInOut,
+                    width: widget.width,
+                    height: barHeight,
+                    decoration: BoxDecoration(
+                      color: barColor,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                      boxShadow: widget.state == SearchBarState.comparing ||
+                              widget.state == SearchBarState.current
+                          ? [
+                              BoxShadow(
+                                color: barColor.withValues(alpha: 0.5),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         );
@@ -99,10 +153,10 @@ class SearchBar extends StatelessWidget {
     String text;
     Color color;
 
-    if (isMidPointer) {
+    if (widget.isMidPointer) {
       text = 'mid';
       color = AppColors.primary;
-    } else if (isLeftPointer) {
+    } else if (widget.isLeftPointer) {
       text = 'L';
       color = AppColors.success;
     } else {
@@ -130,7 +184,7 @@ class SearchBar extends StatelessWidget {
   }
 
   Color _getLabelColor() {
-    switch (state) {
+    switch (widget.state) {
       case SearchBarState.defaultState:
         return AppColors.textSecondary;
       case SearchBarState.comparing:
@@ -151,7 +205,7 @@ class SearchBar extends StatelessWidget {
   }
 
   Color _getBarColor() {
-    switch (state) {
+    switch (widget.state) {
       case SearchBarState.defaultState:
         return AppColors.vizDefault;
       case SearchBarState.comparing:
