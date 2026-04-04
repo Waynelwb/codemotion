@@ -698,7 +698,7 @@ class _AnimatedFeatureCardState extends State<AnimatedFeatureCard> {
           curve: Curves.easeOutCubic,
           height: 200,
           clipBehavior: Clip.hardEdge,
-          transform: Matrix4.identity()..translate(0.0, _isHovered ? -4.0 : 0.0, 0.0),
+          transform: Matrix4.identity()..translateByDouble(0.0, _isHovered ? -4.0 : 0.0, 0.0, 0.0),
           transformAlignment: Alignment.center,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -799,7 +799,7 @@ class _AnimatedPathStageState extends State<AnimatedPathStage> {
         curve: Curves.easeOutCubic,
         height: 200,
         clipBehavior: Clip.hardEdge,
-        transform: Matrix4.identity()..translate(0.0, _isHovered ? -4.0 : 0.0, 0.0),
+        transform: Matrix4.identity()..translateByDouble(0.0, _isHovered ? -4.0 : 0.0, 0.0, 0.0),
         transformAlignment: Alignment.center,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
