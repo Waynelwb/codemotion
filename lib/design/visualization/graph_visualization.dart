@@ -56,7 +56,7 @@ class GraphVisualization extends StatefulWidget {
     this.highlightedNodes = const {},
     this.highlightedEdges = const {}, 
     this.visitedNodes = const {},
-    this.currentNode = null,
+    this.currentNode,
     this.distances = const {},
     this.showDistances = true,
     this.highlightedEdgeColor,
