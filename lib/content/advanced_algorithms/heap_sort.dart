@@ -529,7 +529,7 @@ vector<int> topK_minHeap(const vector<int>& nums, int k) {
     }
 
     vector<int> result;
-    while (!minHeap.size() > 0) {
+    while (!minHeap.empty()) {
         result.push_back(minHeap.top());
         minHeap.pop();
     }

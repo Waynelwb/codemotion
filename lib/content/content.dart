@@ -39,6 +39,15 @@ import 'advanced_algorithms/heap_sort.dart';
 import 'advanced_algorithms/dynamic_programming.dart';
 import 'advanced_algorithms/greedy_algorithm.dart';
 
+// C++ 高级特性课程
+import 'cpp_advanced/templates.dart';
+import 'cpp_advanced/lambda.dart';
+import 'cpp_advanced/smart_pointers.dart';
+
+// 最短路径与并查集
+import 'algorithms/shortest_path.dart';
+import 'data_structures/union_find.dart';
+
 // Re-export all content
 export 'course_data.dart';
 export 'basics/variables.dart';
@@ -67,6 +76,11 @@ export 'data_structures/binary_tree.dart';
 export 'advanced_algorithms/heap_sort.dart';
 export 'advanced_algorithms/dynamic_programming.dart';
 export 'advanced_algorithms/greedy_algorithm.dart';
+export 'cpp_advanced/templates.dart';
+export 'cpp_advanced/lambda.dart';
+export 'cpp_advanced/smart_pointers.dart';
+export 'algorithms/shortest_path.dart';
+export 'data_structures/union_find.dart';
 
 /// 所有课程章节列表
 final List<CourseChapter> allChapters = [
@@ -109,6 +123,15 @@ final List<CourseChapter> allChapters = [
   chapterHeapSort,
   chapterDynamicProgramming,
   chapterGreedyAlgorithm,
+
+  // C++ 高级特性
+  chapterTemplates,
+  chapterLambda,
+  chapterSmartPointers,
+
+  // 最短路径与并查集
+  chapterShortestPath,
+  chapterUnionFind,
 ];
 
 /// 按难度分组的课程章节
