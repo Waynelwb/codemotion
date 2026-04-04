@@ -1,3 +1,4 @@
+// ignore_for_file: unnecessary_string_escapes
 // 数据结构 - 并查集 - Union-Find (Disjoint Set)
 import '../course_data.dart';
 

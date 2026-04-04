@@ -1,3 +1,4 @@
+// ignore_for_file: unnecessary_string_escapes
 // Algorithm Design Strategies Course Content
 import '../course_data.dart';
 
@@ -689,7 +690,7 @@ int main() {
     string s = "25525511135";
     auto result = restoreIpAddresses(s);
 
-    cout << "\"" << s << "\" 可以复原为以下 IP 地址:" << endl;
+    cout << "\"" << s << "\" 可以复原为以下 IP 地址:" << endl; // ignore: unnecessary_string_escapes
     for (const string& ip : result) {
         cout << ip << endl;
     }

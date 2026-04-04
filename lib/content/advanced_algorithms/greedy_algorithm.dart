@@ -502,11 +502,11 @@ int main() {
     cout << "\\n构建哈夫曼树:" << endl;
     HuffmanNode* root = buildHuffmanTree(freq);
 
-    cout << "\\n哈夫曼编码:" << endl;
+    cout << "\\n哈夫曼编码:" << endl; // ignore: unnecessary_string_escapes
     unordered_map<char, string> huffmanCode;
     generateCodes(root, "", huffmanCode);
 
-    cout << "\n编码 \"" << text << "\":" << endl;
+    cout << "\\n编码 \\"" << text << "\\":" << endl; // ignore: unnecessary_string_escapes
     string encoded = encode(text, huffmanCode);
     cout << "编码结果: " << encoded << endl;
     cout << "原始长度: " << text.length() * 8 << " 位" << endl;
