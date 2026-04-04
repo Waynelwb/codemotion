@@ -516,6 +516,7 @@ class _CourseListPageState extends State<CourseListPage>
         icon: Icons.data_object,
         tags: ['变量', '常量', '类型转换'],
         lessonCount: 2,
+        progress: 0.6,
       ),
       CourseOverviewModel(
         id: 'basics_operators',
@@ -526,6 +527,7 @@ class _CourseListPageState extends State<CourseListPage>
         icon: Icons.calculate,
         tags: ['算术运算', '逻辑运算', '位运算'],
         lessonCount: 2,
+        progress: 0.3,
       ),
       CourseOverviewModel(
         id: 'basics_control_flow',
@@ -651,6 +653,7 @@ class _CourseListPageState extends State<CourseListPage>
         icon: Icons.sort,
         tags: ['排序', '分治', '递归'],
         lessonCount: 5,
+        progress: 0.75,
       ),
       CourseOverviewModel(
         id: 'algorithms_searching',
@@ -661,6 +664,7 @@ class _CourseListPageState extends State<CourseListPage>
         icon: Icons.search,
         tags: ['二分查找', '哈希'],
         lessonCount: 3,
+        progress: 0.2,
       ),
     ];
   }
