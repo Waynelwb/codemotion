@@ -74,6 +74,9 @@ class HomePage extends StatelessWidget {
             child: _buildFeatures(context, colorScheme, hp, vp),
           ),
           SliverToBoxAdapter(
+            child: _buildVisualizationShowcase(context, colorScheme, hp, vp),
+          ),
+          SliverToBoxAdapter(
             child: _buildLearningPath(context, colorScheme, hp, vp),
           ),
           SliverToBoxAdapter(
@@ -620,6 +623,140 @@ class HomePage extends StatelessWidget {
     return AnimatedPathStage(stage: stage);
   }
 
+  Widget _buildVisualizationShowcase(
+      BuildContext context, ColorScheme colorScheme, double hp, double vp) {
+    final titleSize = Responsive.sectionTitleSize(context);
+    final isMobile = Responsive.isMobile(context);
+
+    final showcases = [
+      {
+        'icon': Icons.sort,
+        'title': '排序算法',
+        'desc': '观察冒泡、选择、插入、归并、快速排序的每一步执行过程',
+        'color': const Color(0xFF6366F1),
+        'tags': ['快速排序', '归并排序', '堆排序'],
+        'onTap': () => globalNavigator.navigateToVisualize(),
+      },
+      {
+        'icon': Icons.search,
+        'title': '查找算法',
+        'desc': '体验顺序查找和二分查找的可视化过程，直观理解搜索效率',
+        'color': const Color(0xFFEC4899),
+        'tags': ['二分查找', '顺序查找'],
+        'onTap': () => globalNavigator.navigateToVisualize(),
+      },
+      {
+        'icon': Icons.account_tree,
+        'title': '最短路径',
+        'desc': 'Dijkstra、Bellman-Ford 等最短路径算法的动态演示',
+        'color': const Color(0xFF14B8A6),
+        'tags': ['Dijkstra', 'Bellman-Ford'],
+        'onTap': () => globalNavigator.navigateToVisualize(),
+      },
+    ];
+
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: vp, horizontal: hp),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '算法可视化',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: titleSize,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '动态演示算法执行步骤，深入理解每一步的变化',
+                      style: TextStyle(
+                        fontSize: isMobile ? 15 : 18,
+                        color: Colors.white.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isMobile) ...[
+                OutlinedButton.icon(
+                  onPressed: () => globalNavigator.navigateToVisualize(),
+                  icon: const Icon(Icons.play_circle_outline, size: 18),
+                  label: const Text('打开可视化'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colorScheme.primary,
+                    side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.5)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 40),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              int crossAxisCount;
+              if (isMobile) {
+                crossAxisCount = 1;
+              } else if (width < 800) {
+                crossAxisCount = 2;
+              } else {
+                crossAxisCount = 3;
+              }
+              final spacing = 16.0;
+              final cardWidth = (width - spacing * (crossAxisCount - 1)) / crossAxisCount;
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: showcases.asMap().entries.map((entry) {
+                  return SizedBox(
+                    width: cardWidth,
+                    child: AnimatedVisualizationCard(
+                      colorScheme: colorScheme,
+                      showcase: entry.value,
+                      delayMs: entry.key * 120,
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+          if (isMobile) ...[
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => globalNavigator.navigateToVisualize(),
+                icon: const Icon(Icons.play_circle_outline, size: 18),
+                label: const Text('打开可视化'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colorScheme.primary,
+                  side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.5)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildFooter(
       BuildContext context, ColorScheme colorScheme, double hp) {
     return Container(
@@ -769,6 +906,247 @@ class _AnimatedFeatureCardState extends State<AnimatedFeatureCard> {
     );
   }
 }
+
+// ============================================================================
+// Animated Visualization Card - showcase section for algorithm visualizations
+// ============================================================================
+class AnimatedVisualizationCard extends StatefulWidget {
+  const AnimatedVisualizationCard({
+    super.key,
+    required this.colorScheme,
+    required this.showcase,
+    this.delayMs = 0,
+  });
+
+  final ColorScheme colorScheme;
+  final Map<String, dynamic> showcase;
+  final int delayMs;
+
+  @override
+  State<AnimatedVisualizationCard> createState() =>
+      _AnimatedVisualizationCardState();
+}
+
+class _AnimatedVisualizationCardState extends State<AnimatedVisualizationCard>
+    with SingleTickerProviderStateMixin {
+  bool _isHovered = false;
+  late AnimationController _shimmerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    Future.delayed(Duration(milliseconds: widget.delayMs), () {
+      if (mounted) _shimmerController.repeat();
+    });
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final showcase = widget.showcase;
+    final showcaseColor = showcase['color'] as Color;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: showcase['onTap'] as VoidCallback,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          clipBehavior: Clip.hardEdge,
+          transform: Matrix4.translationValues(0.0, _isHovered ? -6.0 : 0.0, 0.0),
+          transformAlignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: _isHovered
+                  ? [
+                      showcaseColor.withValues(alpha: 0.2),
+                      const Color(0xFF12121A),
+                    ]
+                  : [
+                      const Color(0xFF12121A),
+                      const Color(0xFF0E0E16),
+                    ],
+            ),
+            border: Border.all(
+              color: _isHovered
+                  ? showcaseColor.withValues(alpha: 0.6)
+                  : showcaseColor.withValues(alpha: 0.2),
+              width: _isHovered ? 1.5 : 1,
+            ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: showcaseColor.withValues(alpha: 0.2),
+                      blurRadius: 32,
+                      offset: const Offset(0, 12),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Stack(
+            children: [
+              // Subtle animated background shimmer when hovered
+              if (_isHovered)
+                Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: _shimmerController,
+                    builder: (context, child) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          gradient: LinearGradient(
+                            begin: Alignment(-1 + 2 * _shimmerController.value, -1),
+                            end: Alignment(-1 + 2 * _shimmerController.value, 1),
+                            colors: [
+                              Colors.transparent,
+                              showcaseColor.withValues(alpha: 0.05),
+                              Colors.transparent,
+                            ],
+                            stops: const [0.0, 0.5, 1.0],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 220),
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: showcaseColor.withValues(
+                              alpha: _isHovered ? 0.3 : 0.15,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: showcaseColor.withValues(
+                                alpha: _isHovered ? 0.5 : 0.2,
+                              ),
+                            ),
+                          ),
+                          child: Icon(
+                            showcase['icon'] as IconData,
+                            color: showcaseColor,
+                            size: 26,
+                          ),
+                        ),
+                        const Spacer(),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 220),
+                          opacity: _isHovered ? 1.0 : 0.0,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 220),
+                            transform: Matrix4.translationValues(
+                                  _isHovered ? 0.0 : 12.0, 0.0, 0.0),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: showcaseColor.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.play_arrow,
+                                      color: showcaseColor, size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '体验',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: showcaseColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      showcase['title'] as String,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      showcase['desc'] as String,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.55),
+                        height: 1.5,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children:
+                          (showcase['tags'] as List<String>).map((tag) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: showcaseColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: showcaseColor.withValues(alpha: 0.25),
+                            ),
+                          ),
+                          child: Text(
+                            tag,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: showcaseColor.withValues(alpha: 0.9),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 // ============================================================================
 // Animated Path Stage with hover effects

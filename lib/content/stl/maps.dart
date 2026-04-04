@@ -92,7 +92,7 @@ int main() {
     }
 
     // [] vs at
-    cout << "\\n[] vs at:" << endl;
+    cout << "\n[] vs at:" << endl;
     cout << "ages[\"不存在\"] 会插入: " << ages["不存在"] << endl;
     // ages.at("也不存在");  // 这行会抛异常！
 

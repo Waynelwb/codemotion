@@ -363,7 +363,7 @@ class SortAlgorithmGenerator {
       steps.addAll(_makeStates(
         arr,
         SortStepType.compare,
-        '分割 [${left}..$mid] 和 [${mid + 1}..$right]',
+        '分割 [$left..$mid] 和 [${mid + 1}..$right]',
         1,
         i: left,
         j: right,
@@ -427,7 +427,7 @@ class SortAlgorithmGenerator {
       steps.addAll(_makeStates(
         arr,
         SortStepType.complete,
-        '合并 [${left}..$right] 完成',
+        '合并 [$left..$right] 完成',
         4,
       ));
     }

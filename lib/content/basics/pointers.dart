@@ -496,6 +496,114 @@ func(3, 4) = 7''',
         '函数指针可用于回调机制，实现策略模式或泛型算法',
         'lambda 表达式可以替代函数指针，提供更灵活的函数对象',
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：使用指针实现二分查找',
+          code: '''// 使用指针算术运算和函数指针，实现一个通用的二分查找函数
+// 要求：数组用指针和长度表示，回调函数用于比较元素
+#include <iostream>
+using namespace std;
+
+// 在这里补充 binarySearch 函数
+// hint: 使用 (left + right) / 2 计算中点，注意防止溢出
+// hint: 使用 compare 回调比较元素
+
+int main() {
+    int arr[] = {1, 3, 5, 7, 9, 11, 13, 15};
+    int* begin = arr;
+    int* end = arr + 8;
+
+    auto cmp = [](int a, int b) { return a - b; };
+
+    int key = 7;
+    int* result = binarySearch(begin, end, &key, cmp);
+    if (result) {
+        cout << "找到 " << key << " 在索引 " << (result - arr) << endl;
+    } else {
+        cout << "未找到 " << key << endl;
+    }
+    // 期望输出: 找到 7 在索引 3
+}''',
+          description: '结合指针运算和函数指针，实现泛型二分查找。',
+          output: '找到 7 在索引 3',
+        ),
+        CodeExample(
+          title: '练习：使用 qsort 函数指针排序',
+          code: '''// 使用 C 标准库函数 qsort 对结构体数组进行排序
+// qsort 原型: void qsort(void* base, size_t nmemb, size_t size,
+//                       int (*compar)(const void*, const void*));
+#include <iostream>
+#include <cstdlib>
+#include <cstring>
+using namespace std;
+
+struct Student {
+    char name[20];
+    int score;
+};
+
+// 在这里补充比较函数 compareStudents
+// 要求：先按分数降序，分数相同按姓名升序
+
+int main() {
+    Student students[] = {
+        {"Alice", 85}, {"Bob", 92}, {"Charlie", 85},
+        {"David", 78}, {"Eve", 92}
+    };
+    int n = sizeof(students) / sizeof(students[0]);
+
+    qsort(students, n, sizeof(Student), compareStudents);
+
+    cout << "排序后:" << endl;
+    for (int i = 0; i < n; i++) {
+        cout << students[i].name << ": " << students[i].score << endl;
+    }
+}''',
+          description: '练习使用 qsort 和函数指针对复杂数据类型排序。',
+          output: '''排序后:
+Bob: 92
+Eve: 92
+Alice: 85
+Charlie: 85
+David: 78''',
+        ),
+        CodeExample(
+          title: '思考：函数指针 vs lambda vs std::function',
+          code: '''// 分析以下三种做法的优缺点
+#include <iostream>
+#include <functional>
+using namespace std;
+
+// 方法1：普通函数
+bool odd(int x) { return x % 2 == 1; }
+
+// 方法2：函数指针
+bool (*isOdd)(int) = odd;
+
+// 方法3：lambda 表达式
+auto isOddLambda = [](int x) { return x % 2 == 1; };
+
+// 方法4：std::function
+function<bool(int)> isOddFunc = isOddLambda;
+
+int main() {
+    int x = 7;
+
+    cout << "普通函数: " << odd(x) << endl;
+    cout << "函数指针: " << isOdd(x) << endl;
+    cout << "lambda: " << isOddLambda(x) << endl;
+    cout << "std::function: " << isOddFunc(x) << endl;
+
+    // 思考：哪种方式有运行时开销？哪种可以内联？
+    // 哪种可以存储在容器中？
+}''',
+          description: '对比函数指针、lambda、std::function 的性能和使用场景。',
+          output: '''普通函数: 1
+函数指针: 1
+lambda: 1
+std::function: 1''',
+        ),
+      ],
     ),
   ],
 );

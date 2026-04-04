@@ -522,6 +522,124 @@ MoveOnly 移动''',
         '完美转发 std::forward 保持参数的原始左右值属性',
         '移动后原对象变为空，必须将源对象的指针/引用置为空',
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：实现 swap 函数',
+          code: '''// 使用引用实现一个高效的 swap 函数，交换两个变量的值
+// 要求：不使用 std::swap，不使用临时变量（利用引用特性）
+#include <iostream>
+using namespace std;
+
+// 在这里补充 swap 函数实现
+
+int main() {
+    int a = 10, b = 20;
+    cout << "交换前: a=" << a << ", b=" << b << endl;
+    swap(a, b);
+    cout << "交换后: a=" << a << ", b=" << b << endl;
+    // 期望输出:
+    // 交换前: a=10, b=20
+    // 交换后: a=20, b=10
+}''',
+          description: '利用引用特性，用最少的代码实现 swap。',
+          output: '''交换前: a=10, b=20
+交换后: a=20, b=10''',
+        ),
+        CodeExample(
+          title: '练习：移动语义实现',
+          code: '''// 实现一个简单的 String 类，包含移动构造函数和移动赋值运算符
+// 要求：移动后源对象的指针应置为 nullptr
+#include <iostream>
+#include <cstring>
+using namespace std;
+
+class String {
+public:
+    char* data;
+    int len;
+
+    // 普通构造函数
+    String(const char* s) {
+        len = strlen(s);
+        data = new char[len + 1];
+        strcpy(data, s);
+        cout << "构造: " << data << endl;
+    }
+
+    // 在这里补充移动构造函数
+
+    // 在这里补充移动赋值运算符
+
+    ~String() {
+        cout << "析构: " << (data ? data : "(空)") << endl;
+        delete[] data;
+    }
+};
+
+int main() {
+    cout << "=== 移动构造 ===" << endl;
+    String s1("Hello");
+    String s2(std::move(s1));  // 应该调用移动构造
+
+    cout << "\ns1: " << (s1.data ? s1.data : "(空)") << endl;
+    cout << "s2: " << s2.data << endl;
+
+    cout << "\n=== 移动赋值 ===" << endl;
+    String s3("World");
+    s3 = std::move(s2);  // 应该调用移动赋值
+    cout << "s3: " << s3.data << endl;
+}''',
+          description: '手动实现移动构造函数和移动赋值运算符，理解移动语义。',
+          output: '''=== 移动构造 ===
+构造: Hello
+移动构造: Hello
+
+s1: (空)
+s2: Hello
+
+=== 移动赋值 ===
+构造: World
+移动赋值: Hello
+s3: Hello''',
+        ),
+        CodeExample(
+          title: '思考：引用折叠规则',
+          code: '''// 理解 C++11 的引用折叠规则
+// 规则1: T& & → T&
+// 规则2: T& && → T&
+// 规则3: T&& & → T&
+// 规则4: T&& && → T&&
+
+#include <iostream>
+using namespace std;
+
+template<typename T>
+void deduce(T) { cout << "T" << endl; }
+
+template<typename T>
+void deduce(T&) { cout << "T&" << endl; }
+
+int main() {
+    int x = 10;
+    int& rx = x;
+
+    cout << "deduce(x): ";
+    deduce(x);        // 调用哪个?
+
+    cout << "deduce(rx): ";
+    deduce(rx);       // 调用哪个?
+
+    cout << "deduce(int()): ";
+    deduce(int());     // 调用哪个? (int() 是右值)
+
+    // 思考：完美转发中 T&& 的推导规则是什么？
+}''',
+          description: '分析模板参数推导中引用类型的变化规律。',
+          output: '''deduce(x): T&
+deduce(rx): T&
+deduce(int()): T''',
+        ),
+      ],
     ),
   ],
 );
