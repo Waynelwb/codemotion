@@ -13,6 +13,7 @@ import '../models/algorithm_model.dart';
 import '../models/visualization_state.dart';
 import '../content/algorithms/searching.dart';
 import '../app_router.dart';
+import 'course_detail_page.dart';
 
 /// Visualization mode enum
 enum VisualizationMode {
@@ -932,6 +933,10 @@ class _VisualizationPageState extends State<VisualizationPage>
     final courseName = _mode == VisualizationMode.sorting
         ? '排序算法'
         : '查找算法';
+    final courseIcon = _mode == VisualizationMode.sorting
+        ? Icons.sort
+        : Icons.search;
+    final heroTag = 'course-hero-$courseName';
 
     return Container(
       padding: EdgeInsets.all(padding),
@@ -943,13 +948,16 @@ class _VisualizationPageState extends State<VisualizationPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.warning.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+          Hero(
+            tag: heroTag,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(courseIcon, color: AppColors.warning, size: 18),
             ),
-            child: Icon(Icons.school, color: AppColors.warning, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -969,7 +977,35 @@ class _VisualizationPageState extends State<VisualizationPage>
             ),
           ),
           GestureDetector(
-            onTap: () => globalNavigator.navigateToCourseDetail(courseId),
+            onTap: () {
+              Navigator.of(context).push(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) {
+                    return CourseDetailPage(
+                      courseId: courseId,
+                      heroIcon: courseIcon,
+                      heroTitle: courseName,
+                    );
+                  },
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.05),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        )),
+                        child: child,
+                      ),
+                    );
+                  },
+                  transitionDuration: const Duration(milliseconds: 300),
+                ),
+              );
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(

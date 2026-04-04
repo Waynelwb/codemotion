@@ -448,7 +448,7 @@ class _CourseListPageState extends State<CourseListPage>
                   Navigator.of(context).push(
                     PageRouteBuilder(
                       pageBuilder: (context, animation, secondaryAnimation) {
-                        return _CourseDetailPageWrapper(
+                        return CourseDetailPage(
                           courseId: course.id,
                           heroIcon: course.icon,
                           heroTitle: course.title,
@@ -1025,24 +1025,3 @@ class _TagChip extends StatelessWidget {
   }
 }
 
-/// Wrapper for CourseDetailPage to handle navigation
-class _CourseDetailPageWrapper extends StatelessWidget {
-  const _CourseDetailPageWrapper({
-    required this.courseId,
-    required this.heroIcon,
-    required this.heroTitle,
-  });
-
-  final String courseId;
-  final IconData heroIcon;
-  final String heroTitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return CourseDetailPage(
-      courseId: courseId,
-      heroIcon: heroIcon,
-      heroTitle: heroTitle,
-    );
-  }
-}
