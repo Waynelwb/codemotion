@@ -16,6 +16,7 @@
 // ```
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../design_system.dart';
 import 'step_indicator.dart';
 
@@ -149,7 +150,10 @@ class _ControlButtonState extends State<_ControlButton> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
-          onTap: widget.onTap,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            widget.onTap?.call();
+          },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             width: 36,
@@ -198,7 +202,14 @@ class _PlayPauseButtonState extends State<_PlayPauseButton> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: widget.isPlaying ? widget.onPause : widget.onPlay,
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          if (widget.isPlaying) {
+            widget.onPause?.call();
+          } else {
+            widget.onPlay?.call();
+          }
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           width: 44,
@@ -260,7 +271,10 @@ class _SpeedControl extends StatelessWidget {
             child: _SpeedOption(
               label: _speedLabels[index],
               isSelected: isSelected,
-              onTap: () => onChanged?.call(option),
+              onTap: () {
+                HapticFeedback.selectionClick();
+                onChanged?.call(option);
+              },
             ),
           );
         }),
