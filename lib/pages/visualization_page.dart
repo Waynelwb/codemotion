@@ -756,47 +756,11 @@ class _VisualizationPageState extends State<VisualizationPage>
             runSpacing: isMobile ? 8 : 12,
             children: SortingAlgorithm.values.map((algo) {
               final isSelected = algo == _selectedSortAlgorithm;
-              return GestureDetector(
+              return _SortAlgoCard(
+                name: algo.name,
+                complexity: algo.complexity,
+                isSelected: isSelected,
                 onTap: () => _onSortAlgorithmChanged(algo),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 12 : 16,
-                    vertical: isMobile ? 8 : 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.2)
-                        : Colors.transparent,
-                    borderRadius: AppRadius.borderSm,
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.border,
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        algo.name,
-                        style: AppFonts.labelLarge(
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        algo.complexity,
-                        style: AppFonts.bodySmall(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               );
             }).toList(),
           ),
@@ -831,47 +795,11 @@ class _VisualizationPageState extends State<VisualizationPage>
             runSpacing: isMobile ? 8 : 12,
             children: SearchAlgorithm.values.map((algo) {
               final isSelected = algo == _selectedSearchAlgorithm;
-              return GestureDetector(
+              return _SortAlgoCard(
+                name: algo.name,
+                complexity: algo.complexity,
+                isSelected: isSelected,
                 onTap: () => _onSearchAlgorithmChanged(algo),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 12 : 16,
-                    vertical: isMobile ? 8 : 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.2)
-                        : Colors.transparent,
-                    borderRadius: AppRadius.borderSm,
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.border,
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        algo.name,
-                        style: AppFonts.labelLarge(
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        algo.complexity,
-                        style: AppFonts.bodySmall(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               );
             }).toList(),
           ),
@@ -1714,6 +1642,99 @@ void heapSort(vector<int>& arr) {
 }
 
 /// Toast notification widget
+/// A card widget for selecting a sorting algorithm with hover effects
+class _SortAlgoCard extends StatefulWidget {
+  const _SortAlgoCard({
+    required this.name,
+    required this.complexity,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String name;
+  final String complexity;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  State<_SortAlgoCard> createState() => _SortAlgoCardState();
+}
+
+class _SortAlgoCardState extends State<_SortAlgoCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: _isHovered ? 100 : 200),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: widget.isSelected
+                ? AppColors.primary.withValues(alpha: 0.2)
+                : _isHovered
+                    ? AppColors.primary.withValues(alpha: 0.08)
+                    : Colors.transparent,
+            borderRadius: AppRadius.borderSm,
+            border: Border.all(
+              color: widget.isSelected
+                  ? AppColors.primary
+                  : _isHovered
+                      ? AppColors.primary.withValues(alpha: 0.5)
+                      : AppColors.border,
+              width: widget.isSelected ? 2 : 1,
+            ),
+            boxShadow: _isHovered && !widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          transform: _isHovered
+              ? (Matrix4.identity()..scale(1.03, 1.03, 1.0))
+              : Matrix4.identity(),
+          transformAlignment: Alignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.name,
+                style: AppFonts.labelLarge(
+                  color: widget.isSelected
+                      ? AppColors.primary
+                      : _isHovered
+                          ? AppColors.primaryLight
+                          : AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              AnimatedDefaultTextStyle(
+                duration: Duration(milliseconds: _isHovered ? 100 : 200),
+                style: AppFonts.bodySmall(
+                  color: widget.isSelected
+                      ? AppColors.primary.withValues(alpha: 0.8)
+                      : AppColors.textTertiary,
+                ),
+                child: Text(widget.complexity),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ToastWidget extends StatefulWidget {
   const _ToastWidget({
     required this.message,
