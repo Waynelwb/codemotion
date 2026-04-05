@@ -826,8 +826,7 @@ class _AnimatedCourseCard extends StatefulWidget {
   State<_AnimatedCourseCard> createState() => _AnimatedCourseCardState();
 }
 
-class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
-    with SingleTickerProviderStateMixin {
+class _AnimatedCourseCardState extends State<_AnimatedCourseCard> {
   bool _isHovered = false;
   bool _isPressed = false;
 

@@ -201,28 +201,29 @@ class HomePage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Flexible(child: _navLink('首页', isActive: true,
-                    onTap: () => globalNavigator.navigateToHome())),
-                Flexible(child: _navLink('课程',
-                    onTap: () => globalNavigator.navigateToCourses())),
-                Flexible(child: _navLink('可视化',
-                    onTap: () => globalNavigator.navigateToVisualize())),
-                Flexible(child: _navLink('关于')),
+                _navLink('首页', isActive: true,
+                    onTap: () => globalNavigator.navigateToHome()),
+                const SizedBox(width: 32),
+                _navLink('课程',
+                    onTap: () => globalNavigator.navigateToCourses()),
+                const SizedBox(width: 32),
+                _navLink('可视化',
+                    onTap: () => globalNavigator.navigateToVisualize()),
+                const SizedBox(width: 32),
+                _navLink('关于'),
                 const SizedBox(width: 24),
-                Flexible(
-                  child: ElevatedButton(
-                    onPressed: () => globalNavigator.navigateToCourses(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                ElevatedButton(
+                  onPressed: () => globalNavigator.navigateToCourses(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text('开始学习', overflow: TextOverflow.ellipsis),
                   ),
+                  child: const Text('开始学习'),
                 ),
               ],
             ),
@@ -835,7 +836,7 @@ class _AnimatedFeatureCardState extends State<AnimatedFeatureCard> {
           curve: Curves.easeOutCubic,
           height: 200,
           clipBehavior: Clip.hardEdge,
-          transform: Matrix4.identity()..translateByDouble(0.0, _isHovered ? -4.0 : 0.0, 0.0, 0.0),
+          transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
           transformAlignment: Alignment.center,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -1177,7 +1178,7 @@ class _AnimatedPathStageState extends State<AnimatedPathStage> {
         curve: Curves.easeOutCubic,
         height: 200,
         clipBehavior: Clip.hardEdge,
-        transform: Matrix4.identity()..translateByDouble(0.0, _isHovered ? -4.0 : 0.0, 0.0, 0.0),
+        transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
         transformAlignment: Alignment.center,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(

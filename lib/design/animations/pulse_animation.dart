@@ -30,7 +30,7 @@ class PulseAnimation extends StatefulWidget {
 }
 
 class _PulseAnimationState extends State<PulseAnimation>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
@@ -113,7 +113,7 @@ class PulsingHighlight extends StatefulWidget {
 }
 
 class _PulsingHighlightState extends State<PulsingHighlight>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -176,7 +176,7 @@ class BreathingAnimation extends StatefulWidget {
 }
 
 class _BreathingAnimationState extends State<BreathingAnimation>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -228,7 +228,7 @@ class BlinkingAnimation extends StatefulWidget {
 }
 
 class _BlinkingAnimationState extends State<BlinkingAnimation>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -275,7 +275,7 @@ class GlowingAnimation extends StatefulWidget {
 }
 
 class _GlowingAnimationState extends State<GlowingAnimation>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
