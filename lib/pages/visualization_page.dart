@@ -212,6 +212,8 @@ class _VisualizationPageState extends State<VisualizationPage>
   String? _currentStepDescription;
   late AnimationController _stepDescController;
   late Animation<double> _stepDescFadeAnimation;
+  late AnimationController _shuffleAnimController;
+  late Animation<double> _shuffleScaleAnimation;
 
   // Loading state
   bool _isResetting = false;
@@ -228,6 +230,19 @@ class _VisualizationPageState extends State<VisualizationPage>
       parent: _stepDescController,
       curve: Curves.easeInOut,
     );
+    _shuffleAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _shuffleScaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.92), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.92, end: 1.05), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.05, end: 0.97), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.97, end: 1.0), weight: 1),
+    ]).animate(CurvedAnimation(
+      parent: _shuffleAnimController,
+      curve: Curves.easeInOut,
+    ));
     _initializeAlgorithm();
   }
 
@@ -235,6 +250,7 @@ class _VisualizationPageState extends State<VisualizationPage>
   void dispose() {
     _timer?.cancel();
     _stepDescController.dispose();
+    _shuffleAnimController.dispose();
     super.dispose();
   }
 
@@ -397,6 +413,7 @@ class _VisualizationPageState extends State<VisualizationPage>
     _stopTimer();
     setState(() => _isPlaying = false);
     final shuffled = List<int>.from(_initialArray)..shuffle();
+    _shuffleAnimController.forward(from: 0);
     setState(() {
       _initialArray = shuffled;
     });
@@ -1090,9 +1107,17 @@ class _VisualizationPageState extends State<VisualizationPage>
             transitionBuilder: (child, animation) {
               return FadeTransition(opacity: animation, child: child);
             },
-            child: _mode == VisualizationMode.sorting
-                ? KeyedSubtree(key: const ValueKey('sort-chart'), child: _buildSortingChart(chartHeight, barWidth))
-                : KeyedSubtree(key: const ValueKey('search-chart'), child: _buildSearchChart(chartHeight, barWidth)),
+            child: AnimatedBuilder(
+              animation: _shuffleScaleAnimation,
+              builder: (context, chartChild) {
+                return Transform.scale(
+                  scale: _shuffleScaleAnimation.value,
+                  child: _mode == VisualizationMode.sorting
+                      ? KeyedSubtree(key: const ValueKey('sort-chart'), child: _buildSortingChart(chartHeight, barWidth))
+                      : KeyedSubtree(key: const ValueKey('search-chart'), child: _buildSearchChart(chartHeight, barWidth)),
+                );
+              },
+            ),
           ),
           SizedBox(height: isMobile ? 12 : 16),
           _buildLegend(),
