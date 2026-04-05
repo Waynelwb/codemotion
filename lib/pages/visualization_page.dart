@@ -1,6 +1,7 @@
 // Visualization Page - Sorting and Searching Algorithm Visualization
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design/design_system.dart';
 import '../design/responsive.dart';
@@ -662,11 +663,26 @@ class _VisualizationPageState extends State<VisualizationPage>
                 children: [
                   _buildModeSelector(),
                   const SizedBox(height: 20),
-                  if (_mode == VisualizationMode.sorting) ...[
-                    _buildSortAlgorithmSelector(),
-                  ] else ...[
-                    _buildSearchAlgorithmSelector(),
-                  ],
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.0, 0.05),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _mode == VisualizationMode.sorting
+                        ? KeyedSubtree(key: const ValueKey('sort'), child: _buildSortAlgorithmSelector())
+                        : KeyedSubtree(key: const ValueKey('search'), child: _buildSearchAlgorithmSelector()),
+                  ),
                   SizedBox(height: Responsive.isMobile(context) ? 16 : 20),
                   _buildRelatedCourse(),
                   SizedBox(height: Responsive.isMobile(context) ? 24 : 32),
@@ -702,7 +718,10 @@ class _VisualizationPageState extends State<VisualizationPage>
         children: VisualizationMode.values.map((mode) {
           final isSelected = mode == _mode;
           return GestureDetector(
-            onTap: () => _onModeChanged(mode),
+            onTap: () {
+              HapticFeedback.selectionClick();
+              _onModeChanged(mode);
+            },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               padding: EdgeInsets.symmetric(
@@ -906,6 +925,7 @@ class _VisualizationPageState extends State<VisualizationPage>
           ),
           GestureDetector(
             onTap: () {
+              HapticFeedback.lightImpact();
               Navigator.of(context).push(
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) {
@@ -1065,10 +1085,15 @@ class _VisualizationPageState extends State<VisualizationPage>
               ],
             ),
           SizedBox(height: isMobile ? 16 : 32),
-          if (_mode == VisualizationMode.sorting)
-            _buildSortingChart(chartHeight, barWidth)
-          else
-            _buildSearchChart(chartHeight, barWidth),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: _mode == VisualizationMode.sorting
+                ? KeyedSubtree(key: const ValueKey('sort-chart'), child: _buildSortingChart(chartHeight, barWidth))
+                : KeyedSubtree(key: const ValueKey('search-chart'), child: _buildSearchChart(chartHeight, barWidth)),
+          ),
           SizedBox(height: isMobile ? 12 : 16),
           _buildLegend(),
         ],
@@ -1641,8 +1666,8 @@ void heapSort(vector<int>& arr) {
   }
 }
 
-/// Toast notification widget
-/// A card widget for selecting a sorting algorithm with hover effects
+/// A card widget for selecting an algorithm with hover effects.
+/// Used for both sorting and searching algorithm selection.
 class _SortAlgoCard extends StatefulWidget {
   const _SortAlgoCard({
     required this.name,
@@ -1670,7 +1695,10 @@ class _SortAlgoCardState extends State<_SortAlgoCard> {
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          widget.onTap();
+        },
         child: AnimatedContainer(
           duration: Duration(milliseconds: _isHovered ? 100 : 200),
           curve: Curves.easeOut,
@@ -1735,6 +1763,7 @@ class _SortAlgoCardState extends State<_SortAlgoCard> {
   }
 }
 
+/// Toast notification widget — shows a brief success/info message overlay.
 class _ToastWidget extends StatefulWidget {
   const _ToastWidget({
     required this.message,
