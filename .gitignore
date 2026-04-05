@@ -46,3 +46,6 @@ app.*.map.json
 
 # GitHub Actions
 !.github/
+
+# Backup files
+*.backup
