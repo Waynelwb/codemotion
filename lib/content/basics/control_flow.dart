@@ -244,6 +244,54 @@ case 3 (从 case 2 贯穿而来)''',
         '每个 case 后要加 break，否则会「贯穿」到下一个 case',
         '注意 = (赋值) 和 == (比较) 的区别，编译器可能不报警告',
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：计算器等级',
+          code: '''// 根据成绩分数计算等级
+// 规则：
+// - 90 分及以上 → A
+// - 80-89 分 → B
+// - 70-79 分 → C
+// - 60-69 分 → D
+// - 60 分以下 → F
+//
+// 使用 if-else if-else 实现
+evalGrade(int score) {
+    // 在这里补充代码
+}
+
+int main() {
+    int scores[] = {95, 82, 75, 68, 45};
+    for (int s : scores) {
+        cout << s << "分 → " << evalGrade(s) << endl;
+    }
+}''',
+          description: '使用条件语句根据分数输出对应等级。',
+          output: '95分 → A\n82分 → B\n75分 → C\n68分 → D\n45分 → F',
+        ),
+        CodeExample(
+          title: '练习：BMI 计算器',
+          code: '''// 使用 switch 实现 BMI 评估
+// BMI = 体重(kg) / 身高(m)^2
+// - BMI < 18.5 → 偏瘦
+// - 18.5 <= BMI < 24 → 正常
+// - 24 <= BMI < 28 → 偏胖
+// - BMI >= 28 → 肥胖
+//
+// 提示：先算出 BMI（取整），再用 switch 判断
+
+string evalBMI(double weight, double height) {
+    // 在这里补充代码
+}
+
+int main() {
+    cout << evalBMI(60, 1.75) << endl;  // 正常
+    cout << evalBMI(80, 1.70) << endl;  // 偏胖
+}''',
+          description: '结合数学运算和 switch 语句实现 BMI 评估器。注意要先对 BMI 取整再 switch。',
+          output: '正常\n偏胖',
+        ),
+      ],
     ),
 
     CourseLesson(
@@ -518,6 +566,75 @@ int main() {
         'break 跳出整个循环，continue 跳过本次循环迭代',
         '范围 for 循环 (for auto x : container) 是遍历容器的好方法',
         '循环嵌套时注意变量的作用域和命名冲突',
+      ],
+      exercises: [
+        CodeExample(
+          title: '练习：打印菱形',
+          code: '''// 使用循环打印如下菱形（n=5 时）
+//     *
+//    ***
+//   *****
+//  *******
+// *********
+//  *******
+//   *****
+//    ***
+//     *
+//
+// 提示：分上半部分和下半部分打印
+void printDiamond(int n) {
+    // 在这里补充代码
+}
+
+int main() {
+    printDiamond(5);
+}''',
+          description: '使用嵌套 for 循环打印菱形图案，掌握循环嵌套的技巧。',
+          output: '    *\n   ***\n  *****\n *******\n*********\n *******\n  *****\n   ***\n    *',
+        ),
+        CodeExample(
+          title: '练习：找出质数',
+          code: '''// 使用循环找出 2 到 N 之间的所有质数
+// 质数：只能被 1 和自身整除的自然数
+//
+// 例如：2,3,5,7,11,13,17,19,23 是小于 25 的所有质数
+void printPrimes(int n) {
+    // 在这里补充代码
+}
+
+int main() {
+    printPrimes(30);
+}''',
+          description: '使用嵌套循环实现质数筛法，掌握 break 和 continue 的使用场景。',
+          output: '2 3 5 7 11 13 17 19 23 29',
+        ),
+        CodeExample(
+          title: '练习：阶乘求和',
+          code: '''// 计算 1! + 2! + 3! + ... + N! 的和
+//
+// 例如 N=5 时：1! + 2! + 3! + 4! + 5!
+//           = 1 + 2 + 6 + 24 + 120 = 153
+//
+// 要求：分别用递归和迭代两种方式实现，对比结果
+long long factorialIter(int n) {
+    // 迭代版
+}
+
+long long factorialRec(int n) {
+    // 递归版
+}
+
+long long sumFactorials(int n) {
+    // 使用迭代版阶乘计算
+}
+
+int main() {
+    cout << "N=5 时，阶乘和 = " << sumFactorials(5) << endl;
+    cout << "N=10 时，阶乘和 = " << sumFactorials(10) << endl;
+}''',
+          description: '综合练习循环和函数，同时对比递归和迭代两种实现方式。',
+          output: 'N=5 时，阶乘和 = 153\nN=10 时，阶乘和 = 4037913',
+        ),
       ],
     ),
   ],

@@ -8,6 +8,7 @@ import '../design/animations/pulse_animation.dart';
 import '../models/course_model.dart';
 import '../design/responsive.dart';
 import 'course_detail_page.dart';
+import '../content/content.dart' show chapterVariables, chapterSortAlgorithms, chapterFunctions, chapterVectors;
 import '../app_router.dart';
 
 class CourseListPage extends StatefulWidget {
@@ -130,7 +131,9 @@ class _CourseListPageState extends State<CourseListPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(context),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 32),
+                  _buildContinueLearning(context, hp),
+                  const SizedBox(height: 32),
                   _buildCategoryTabs(context),
                   const SizedBox(height: 32),
                   _buildCurrentCategorySection(context),
@@ -254,6 +257,119 @@ class _CourseListPageState extends State<CourseListPage>
         ],
       ),
     );
+  }
+
+  Widget _buildContinueLearning(BuildContext context, double hp) {
+    // Featured chapters for quick start
+    final featuredChapters = [
+      chapterVariables,
+      chapterSortAlgorithms,
+      chapterFunctions,
+      chapterVectors,
+    ];
+
+    return FadeSlideTransition(
+      direction: SlideDirection.bottomToTop,
+      duration: const Duration(milliseconds: 500),
+      delay: const Duration(milliseconds: 150),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.primary.withValues(alpha: 0.2),
+              AppColors.tertiary.withValues(alpha: 0.1),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.play_circle_fill, color: AppColors.primary, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Text('推荐课程', style: AppFonts.titleMedium()),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${featuredChapters.length} 个课程',
+                    style: AppFonts.labelMedium(color: AppColors.primary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '推荐从「变量与数据类型」开始，系统化掌握 C++ 基础',
+              style: AppFonts.bodyMedium(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 44,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: featuredChapters.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 10),
+                itemBuilder: (context, index) {
+                  final chapter = featuredChapters[index];
+                  return _FeaturedChapterChip(
+                    chapter: chapter,
+                    onTap: () => _openCourseDetail(context, chapter),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openCourseDetail(BuildContext context, CourseChapter chapter) {
+    final heroIcon = _getChapterIcon(chapter);
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return CourseDetailPage(
+            courseId: chapter.id,
+            heroIcon: heroIcon,
+            heroTitle: chapter.title,
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+          return FadeTransition(opacity: curved, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
+  IconData _getChapterIcon(CourseChapter chapter) {
+    final catName = chapter.category.name;
+    if (catName == 'oop') return Icons.class_;
+    if (catName == 'stl') return Icons.science;
+    if (catName == 'algorithms') return Icons.psychology;
+    return Icons.code; // basics as default
   }
 
   Widget _buildCategoryTabs(BuildContext context) {
@@ -887,6 +1003,76 @@ class _AnimatedCourseCardState extends State<_AnimatedCourseCard>
       spacing: 8,
       runSpacing: 8,
       children: widget.tags.map((tag) => _TagChip(label: tag)).toList(),
+    );
+  }
+}
+
+/// Featured chapter quick-start chip
+class _FeaturedChapterChip extends StatefulWidget {
+  const _FeaturedChapterChip({
+    required this.chapter,
+    required this.onTap,
+  });
+
+  final CourseChapter chapter;
+  final VoidCallback onTap;
+
+  @override
+  State<_FeaturedChapterChip> createState() => _FeaturedChapterChipState();
+}
+
+class _FeaturedChapterChipState extends State<_FeaturedChapterChip> {
+  bool _isHovered = false;
+
+  Color get _difficultyColor {
+    final name = widget.chapter.difficulty.name;
+    if (name == 'intermediate') return AppColors.warning;
+    if (name == 'advanced') return AppColors.error;
+    return AppColors.success;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final difficultyColor = _difficultyColor;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? difficultyColor.withValues(alpha: 0.25)
+                : AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: _isHovered
+                  ? difficultyColor.withValues(alpha: 0.6)
+                  : AppColors.border,
+            ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: difficultyColor.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          transform: _isHovered
+              ? (Matrix4.translationValues(0.0, -2.0, 0.0))
+              : Matrix4.identity(),
+          child: Text(
+            widget.chapter.title,
+            style: AppFonts.labelMedium(
+              color: _isHovered ? difficultyColor : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

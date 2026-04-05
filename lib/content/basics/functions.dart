@@ -508,6 +508,97 @@ n		迭代		记忆化		普通递归
         '尾递归可能被编译器优化，减少栈空间使用',
         '能用迭代解决的问题尽量用迭代，避免递归带来的函数调用开销',
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：汉诺塔问题',
+          code: '''// 汉诺塔问题：将 N 个盘子从 A 柱移到 C 柱
+// 规则：
+// 1. 每次只能移动一个盘子
+// 2. 大盘子不能放在小盘子上面
+// 3. 可以借助 B 柱
+//
+// 提示：
+// - 将 N-1 个盘子从 A 借助 C 移到 B
+// - 将最底部盘子从 A 直接移到 C
+// - 将 N-1 个盘子从 B 借助 A 移到 C
+
+void hanoi(int n, char from, char to, char via) {
+    // 在这里补充代码
+}
+
+int main() {
+    cout << "N=3 时汉诺塔移动步骤:" << endl;
+    hanoi(3, 'A', 'C', 'B');
+    cout << "共需移动 2^3-1 = " << (1<<3)-1 << " 步" << endl;
+}''',
+          description: '汉诺塔是经典的递归问题，理解递归思维的核心：将大问题分解为同类子问题。',
+          output: 'N=3 时汉诺塔移动步骤:\nA → C\nA → B\nC → B\nA → C\nB → A\nB → C\nA → C\n共需移动 2^3-1 = 7 步',
+        ),
+        CodeExample(
+          title: '练习：全排列',
+          code: '''// 使用递归生成数组的全排列
+//
+// 例如 {1,2,3} 的全排列：
+// 123, 132, 213, 231, 312, 321
+//
+// 提示：
+// - 固定第 i 个元素，将剩下的元素递归排列
+// - 回溯：交换后需要换回来
+
+void permute(vector<int>& arr, int left, int right) {
+    // 在这里补充代码
+}
+
+int main() {
+    vector<int> arr = {1, 2, 3};
+    permute(arr, 0, arr.size() - 1);
+}''',
+          description: '全排列问题展示递归与回溯的结合，理解「状态恢复」的重要性。',
+          output: '1 2 3 \n1 3 2 \n2 1 3 \n2 3 1 \n3 2 1 \n3 1 2',
+        ),
+        CodeExample(
+          title: '练习：二叉树高度',
+          code: '''// 给定二叉树节点结构，计算树的高度
+//
+// struct TreeNode {
+//     int val;
+//     TreeNode* left;
+//     TreeNode* right;
+//     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+// };
+//
+// 树的高度 = max(左子树高度, 右子树高度) + 1
+// 空树的高度为 -1（或 0，取决于定义）
+
+struct TreeNode {
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+};
+
+int treeHeight(TreeNode* root) {
+    // 在这里补充代码
+}
+
+int main() {
+    //       1
+    //      / \\
+    //     2   3
+    //    / \\
+    //   4   5
+    TreeNode* root = new TreeNode(1);
+    root->left = new TreeNode(2);
+    root->right = new TreeNode(3);
+    root->left->left = new TreeNode(4);
+    root->left->right = new TreeNode(5);
+
+    cout << "树的高度: " << treeHeight(root) << endl;
+}''',
+          description: '二叉树操作是递归的经典应用场景。树高 = max(左子树高, 右子树高) + 1。',
+          output: '树的高度: 2',
+        ),
+      ],
     ),
   ],
 );

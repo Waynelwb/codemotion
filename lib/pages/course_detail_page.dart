@@ -442,6 +442,8 @@ class _CourseDetailPageState extends State<CourseDetailPage>
               final lesson = filteredLessons[index];
               return _LessonCard(
                 lesson: lesson,
+                index: index,
+                totalLessons: filteredLessons.length,
                 isExpanded: _expandedLessons.contains(lesson.id),
                 isCompleted: _completedLessons.contains(lesson.id),
                 onToggle: () => _toggleLesson(lesson.id),
@@ -585,6 +587,8 @@ class _SearchField extends StatelessWidget {
 class _LessonCard extends StatefulWidget {
   const _LessonCard({
     required this.lesson,
+    required this.index,
+    required this.totalLessons,
     required this.isExpanded,
     required this.isCompleted,
     required this.onToggle,
@@ -592,6 +596,8 @@ class _LessonCard extends StatefulWidget {
   });
 
   final CourseLesson lesson;
+  final int index;
+  final int totalLessons;
   final bool isExpanded;
   final bool isCompleted;
   final VoidCallback onToggle;
@@ -604,9 +610,13 @@ class _LessonCard extends StatefulWidget {
 class _LessonCardState extends State<_LessonCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  late AnimationController _celebrateController;
   late Animation<double> _expandAnimation;
   late Animation<double> _rotateAnimation;
+  late Animation<double> _celebrateScale;
+  late Animation<double> _celebrateOpacity;
   bool _isHovered = false;
+  bool _justCompleted = false;
 
   @override
   void initState() {
@@ -620,7 +630,24 @@ class _LessonCardState extends State<_LessonCard>
       curve: Curves.easeInOut,
     );
     _rotateAnimation = Tween<double>(begin: 0, end: 0.5).animate(_expandAnimation);
-    
+
+    _celebrateController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _celebrateScale = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(
+        parent: _celebrateController,
+        curve: Curves.easeOutBack,
+      ),
+    );
+    _celebrateOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _celebrateController,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+      ),
+    );
+
     if (widget.isExpanded) {
       _controller.value = 1.0;
     }
@@ -636,11 +663,22 @@ class _LessonCardState extends State<_LessonCard>
         _controller.reverse();
       }
     }
+    // Trigger celebration when newly completed
+    if (widget.isCompleted && !oldWidget.isCompleted) {
+      _justCompleted = true;
+      _celebrateController.forward(from: 0.0).then((_) {
+        _celebrateController.reverse();
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) setState(() => _justCompleted = false);
+        });
+      });
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _celebrateController.dispose();
     super.dispose();
   }
 
@@ -686,31 +724,70 @@ class _LessonCardState extends State<_LessonCard>
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    // Completion checkbox
+                    // Completion checkbox with celebration
                     GestureDetector(
                       onTap: widget.onComplete,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: widget.isCompleted
-                              ? AppColors.success
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: widget.isCompleted
-                                ? AppColors.success
-                                : AppColors.border,
-                            width: 2,
-                          ),
-                        ),
-                        child: widget.isCompleted
-                            ? const Icon(Icons.check, color: Colors.white, size: 16)
-                            : null,
+                      child: AnimatedBuilder(
+                        animation: _celebrateController,
+                        builder: (context, child) {
+                          final scale = widget.isCompleted
+                              ? (_justCompleted ? _celebrateScale.value : 1.0)
+                              : 1.0;
+                          return Transform.scale(
+                            scale: scale,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: widget.isCompleted
+                                        ? AppColors.success
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: widget.isCompleted
+                                          ? AppColors.success
+                                          : AppColors.border,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: widget.isCompleted
+                                      ? const Icon(Icons.check, color: Colors.white, size: 16)
+                                      : null,
+                                ),
+                                if (_justCompleted)
+                                  Positioned.fill(
+                                    child: Opacity(
+                                      opacity: _celebrateOpacity.value,
+                                      child: _CompletionStars(),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 8),
+                    // Lesson index badge
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${widget.index + 1}',
+                          style: AppFonts.labelMedium(color: AppColors.primary),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
                     // Lesson info
                     Expanded(
                       child: Column(
@@ -731,6 +808,17 @@ class _LessonCardState extends State<_LessonCard>
                           const SizedBox(height: 4),
                           Row(
                             children: [
+                              Icon(
+                                Icons.schedule,
+                                size: 14,
+                                color: AppColors.info,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _estimateTime(),
+                                style: AppFonts.labelMedium(color: AppColors.info),
+                              ),
+                              const SizedBox(width: 12),
                               Icon(
                                 Icons.code,
                                 size: 14,
@@ -754,17 +842,6 @@ class _LessonCardState extends State<_LessonCard>
                                   style: AppFonts.labelMedium(color: AppColors.warning),
                                 ),
                               ],
-                              const SizedBox(width: 12),
-                              Icon(
-                                Icons.lightbulb_outline,
-                                size: 14,
-                                color: AppColors.textTertiary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${widget.lesson.keyPoints.length} 个知识点',
-                                style: AppFonts.labelMedium(color: AppColors.textTertiary),
-                              ),
                             ],
                           ),
                         ],
@@ -797,6 +874,18 @@ class _LessonCardState extends State<_LessonCard>
         ),
       ),
     );
+  }
+
+  String _estimateTime() {
+    // Estimate: 5 min per code example + 3 min per exercise + 1 min per key point
+    final codeMin = widget.lesson.codeExamples.length * 5;
+    final exerciseMin = widget.lesson.exercises.length * 3;
+    final keyPointMin = widget.lesson.keyPoints.length * 1;
+    final total = codeMin + exerciseMin + keyPointMin;
+    if (total < 60) return '~$total 分钟';
+    final hours = total ~/ 60;
+    final mins = total % 60;
+    return mins > 0 ? '~$hours 小时 $mins 分钟' : '~$hours 小时';
   }
 
   Widget _buildExpandedContent() {
@@ -987,6 +1076,41 @@ class _LessonCardState extends State<_LessonCard>
       ],
     );
   }
+}
+
+/// Stars burst animation when lesson is completed
+class _CompletionStars extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _StarsPainter(),
+      size: Size.infinite,
+    );
+  }
+}
+
+class _StarsPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final starPositions = [
+      Offset(center.dx - 18, center.dy - 18),
+      Offset(center.dx + 18, center.dy - 14),
+      Offset(center.dx - 14, center.dy + 16),
+      Offset(center.dx + 16, center.dy + 12),
+      Offset(center.dx, center.dy - 22),
+    ];
+    final starColor = AppColors.warning;
+    for (final pos in starPositions) {
+      final paint = Paint()
+        ..color = starColor
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(pos, 2.5, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// Code example card with syntax highlighting
