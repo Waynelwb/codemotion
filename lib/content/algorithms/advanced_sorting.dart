@@ -284,6 +284,79 @@ int main() {
 最终结果: 1 3 4 5 10''',
         ),
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：实现最小堆',
+          code: '''// 实现一个最小堆，支持插入和弹出最小值
+#include <iostream>
+#include <vector>
+using namespace std;
+
+class MinHeap {
+private:
+    vector<int> heap;
+    
+    void heapifyUp(int idx) {
+        // 补充代码：从 idx 向上调整
+    }
+    
+    void heapifyDown(int idx) {
+        // 补充代码：从 idx 向下调整
+    }
+    
+public:
+    void insert(int val) {
+        heap.push_back(val);
+        heapifyUp(heap.size() - 1);
+    }
+    
+    int extractMin() {
+        int minVal = heap[0];
+        heap[0] = heap.back();
+        heap.pop_back();
+        heapifyDown(0);
+        return minVal;
+    }
+    
+    bool isEmpty() { return heap.empty(); }
+    int size() { return heap.size(); }
+};
+
+int main() {
+    MinHeap h;
+    h.insert(5);
+    h.insert(3);
+    h.insert(8);
+    h.insert(1);
+    h.insert(9);
+    
+    while (!h.isEmpty()) {
+        cout << h.extractMin() << " ";
+    }
+    // 期望输出: 1 3 5 8 9
+}''',
+          description: '实现最小堆的插入和弹出操作。',
+          output: '1 3 5 8 9',
+        ),
+        CodeExample(
+          title: '思考：堆排序为什么不稳定？',
+          code: '''// 考虑相同值的情况，堆排序如何破坏稳定性？
+//
+// 示例数组: [5a, 5b, 4]  （5a 在 5b 前面）
+//
+// 构建最大堆后可能变成: [5b, 5a, 4]
+// （取决于堆的具体结构）
+//
+// 尝试用这个数组测试：
+vector<pair<char, int>> arr = {
+    {'A', 5}, {'B', 5}, {'C', 4},
+    {'D', 3}, {'E', 5}, {'F', 2}
+};
+//
+// 思考：在 heapify 过程中，什么操作会导致相等元素的相对位置改变？''',
+          description: '分析堆排序不稳定性的原因。',
+        ),
+      ],
       keyPoints: [
         '堆排序基于二叉堆数据结构',
         '时间复杂度稳定 O(n log n)，空间复杂度 O(1)',
@@ -411,6 +484,41 @@ int main() {
 输出: 0 0 2 2 3 3 3 5''',
         ),
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：实现不稳定版计数排序',
+          code: '''// 实现一个不稳定版本的计数排序
+#include <iostream>
+#include <vector>
+using namespace std;
+
+void unstableCountingSort(const vector<int>& input, vector<int>& output) {
+    if (input.empty()) return;
+    int maxVal = input[0];
+    for (int x : input) if (x > maxVal) maxVal = x;
+    vector<int> count(maxVal + 1, 0);
+    for (int x : input) count[x]++;
+    for (int i = 1; i <= maxVal; i++) count[i] += count[i - 1];
+    // 思考：不稳定版本如何修改？提示：不需要从后向前遍历
+}
+
+int main() {
+    vector<int> input = {2, 5, 3, 0, 2, 3, 0, 3};
+    vector<int> output;
+    unstableCountingSort(input, output);
+    for (int x : output) cout << x << ' ';
+    // 期望输出: 0 0 2 2 3 3 3 5
+}''',
+          description: '将稳定版改为不稳定版本。',
+          output: '0 0 2 2 3 3 3 5',
+        ),
+        CodeExample(
+          title: '思考：计数排序的空间优化',
+          code: '''// 数据最大值很大但数据量小的情况如何优化？
+// 提示：使用 min 值作为偏移基准''',
+          description: '思考大数据范围场景下的空间优化策略。',
+        ),
+      ],
       keyPoints: [
         '计数排序是非比较排序，时间复杂度 O(n + k)',
         '适合数据范围较小的整数排序',
@@ -529,6 +637,53 @@ int main() {
           description: '桶排序的完整实现，使用插入排序处理桶内元素。',
           output: '''排序前: 0.78 0.17 0.39 0.26 0.72 0.94 0.21 0.12 0.23 0.68
 排序后: 0.12 0.17 0.21 0.23 0.26 0.39 0.68 0.72 0.78 0.94''',
+        ),
+      ],
+      exercises: [
+        CodeExample(
+          title: '练习：实现支持任意范围的桶排序',
+          code: '''// 桶排序默认假设数据在 [0, 1) 范围内
+// 实现支持任意 [min, max] 范围的版本
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int getBucketIndex(double val, double minVal, double maxVal, int bucketCount) {
+    if (maxVal == minVal) return 0;
+    // 补充代码：计算 val 应该放入哪个桶
+}
+
+void bucketSortGeneral(vector<double>& arr) {
+    if (arr.empty()) return;
+    int n = arr.size();
+    double minVal = *min_element(arr.begin(), arr.end());
+    double maxVal = *max_element(arr.begin(), arr.end());
+    vector<vector<double>> buckets(n);
+    
+    for (double val : arr) {
+        int idx = getBucketIndex(val, minVal, maxVal, n);
+        buckets[idx].push_back(val);
+    }
+    
+    for (int i = 0; i < n; i++) {
+        if (!buckets[i].empty()) sort(buckets[i].begin(), buckets[i].end());
+    }
+    
+    int idx = 0;
+    for (int i = 0; i < n; i++) {
+        for (double val : buckets[i]) arr[idx++] = val;
+    }
+}
+
+int main() {
+    vector<double> arr = {-2.5, -1.0, 0.5, 2.0, 5.5, 8.0};
+    bucketSortGeneral(arr);
+    for (double x : arr) cout << x << ' ';
+    // 期望输出: -2.5 -1 0.5 2 5.5 8
+}''',
+          description: '扩展桶排序以支持任意范围的数据。',
+          output: '-2.5 -1 0.5 2 5.5 8',
         ),
       ],
       keyPoints: [
@@ -689,6 +844,48 @@ int main() {
 第 3 轮排序（按第 3 位）: 2 24 45 66 75 90 170 802
 
 最终结果: 2 24 45 66 75 90 170 802''',
+        ),
+      ],
+      exercises: [
+        CodeExample(
+          title: '练习：实现 MSD 基数排序',
+          code: '''// 实现 MSD（最高位优先）基数排序
+// MSD 更适合字符串排序
+#include <iostream>
+#include <vector>
+#include <string>
+using namespace std;
+
+int getCharAt(const string& s, int d) {
+    if (d >= (int)s.length()) return -1;
+    return s[d];
+}
+
+void msdRadixSort(vector<string>& arr, int high) {
+    // 补充代码：实现 MSD 基数排序
+    // 如果 high - low <= 1，递归终止
+}
+
+int main() {
+    vector<string> arr = {"apple", "apricot", "banana", "blueberry"};
+    msdRadixSort(arr, arr.size());
+    for (const string& s : arr) cout << s << ' ';
+    // 期望输出: apple apricot banana blueberry
+}''',
+          description: '实现最高位优先的基数排序。',
+          output: 'apple apricot banana blueberry',
+        ),
+        CodeExample(
+          title: '思考：基数排序 vs 比较排序',
+          code: '''// 基数排序时间复杂度 O(d × (n + k))
+// 比较排序最快 O(n log n)
+//
+// 思考题：
+// 1. 当 n=1000000, d=5, k=10 时谁更快？
+// 2. 位数 d 很大时（如身份证18位）还合适吗？
+// 3. 什么情况下比较排序反而更快？
+// 4. 基数排序和桶排序的关系是什么？''',
+          description: '比较基数排序和比较排序的适用场景。',
         ),
       ],
       keyPoints: [
