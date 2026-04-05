@@ -10,6 +10,7 @@ import '../design/visualization/search_bar.dart';
 import '../design/visualization/visualization_controls.dart';
 import '../design/visualization/code_highlight.dart';
 import '../design/visualization/step_indicator.dart';
+import '../design/visualization/course_banner.dart';
 import '../models/algorithm_model.dart';
 import '../models/visualization_state.dart';
 import '../content/algorithms/searching.dart';
@@ -902,102 +903,47 @@ class _VisualizationPageState extends State<VisualizationPage>
         : Icons.search;
     final heroTag = 'course-hero-$courseName';
 
-    return Container(
-      padding: EdgeInsets.all(padding),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Hero(
-            tag: heroTag,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(courseIcon, color: AppColors.warning, size: 18),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '关联课程',
-                  style: AppFonts.labelMedium(color: AppColors.textTertiary),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  courseName,
-                  style: AppFonts.labelLarge(color: Colors.white),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).push(
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) {
-                    return CourseDetailPage(
-                      courseId: courseId,
-                      heroIcon: courseIcon,
-                      heroTitle: courseName,
-                    );
-                  },
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    final curved = CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutQuart,
-                    );
-                    return FadeTransition(
-                      opacity: curved,
-                      child: ScaleTransition(
-                        scale: Tween<double>(begin: 0.95, end: 1.0).animate(curved),
-                        alignment: Alignment.topCenter,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.05),
-                            end: Offset.zero,
-                          ).animate(curved),
-                          child: child,
-                        ),
-                      ),
-                    );
-                  },
-                  transitionDuration: const Duration(milliseconds: 350),
+    return AnimatedCourseBanner(
+      courseId: courseId,
+      courseName: courseName,
+      courseIcon: courseIcon,
+      heroTag: heroTag,
+      padding: padding,
+      isMobile: isMobile,
+      onTap: () {
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) {
+              return CourseDetailPage(
+                courseId: courseId,
+                heroIcon: courseIcon,
+                heroTitle: courseName,
+              );
+            },
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              final curved = CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutQuart,
+              );
+              return FadeTransition(
+                opacity: curved,
+                child: ScaleTransition(
+                  scale: Tween<double>(begin: 0.95, end: 1.0).animate(curved),
+                  alignment: Alignment.topCenter,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.05),
+                      end: Offset.zero,
+                    ).animate(curved),
+                    child: child,
+                  ),
                 ),
               );
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '查看课程',
-                    style: AppFonts.labelMedium(color: AppColors.warning),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, color: AppColors.warning, size: 14),
-                ],
-              ),
-            ),
+            transitionDuration: const Duration(milliseconds: 350),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
