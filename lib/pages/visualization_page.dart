@@ -1701,7 +1701,7 @@ class _SortAlgoCardState extends State<_SortAlgoCard> {
                 : null,
           ),
           transform: _isHovered
-              ? (Matrix4.identity()..scale(1.03, 1.03, 1.0))
+              ? Matrix4.diagonal3Values(1.03, 1.03, 1.0)
               : Matrix4.identity(),
           transformAlignment: Alignment.center,
           child: Column(
