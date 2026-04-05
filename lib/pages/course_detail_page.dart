@@ -608,7 +608,7 @@ class _LessonCard extends StatefulWidget {
 }
 
 class _LessonCardState extends State<_LessonCard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late AnimationController _celebrateController;
   late Animation<double> _expandAnimation;
@@ -1124,7 +1124,7 @@ class _CodeExampleCard extends StatefulWidget {
 }
 
 class _CodeExampleCardState extends State<_CodeExampleCard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _slideAnimation;
