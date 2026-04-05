@@ -311,6 +311,53 @@ int main() {
 获得最大利润: 140''',
         ),
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：活动选择问题',
+          code: '''// 给定 n 个活动的起止时间，找出最多能参加的活动数量
+// 活动: (start, end)
+// 示例: (1,4), (2,3), (3,5), (5,6), (6,7)
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+// 按结束时间排序，选择不重叠的活动
+int maxActivities(vector<pair<int,int>>& activities) {
+    // 补充代码
+    // 1. 按结束时间排序
+    // 2. 选择第一个活动
+    // 3. 选择所有与已选活动不重叠的活动
+}
+
+int main() {
+    vector<pair<int,int>> activities = {
+        {1, 4}, {2, 3}, {3, 5}, {5, 6}, {6, 7}, {5, 9}
+    };
+    cout << maxActivities(activities) << endl;
+    // 期望输出: 4 (选择 2,3,5,6 或 2,3,5,7)
+}''',
+          description: '实现活动选择问题的贪心算法。',
+          output: '4',
+        ),
+        CodeExample(
+          title: '思考：为什么按结束时间排序？',
+          code: '''// 思考题：
+// 1. 如果按开始时间排序，贪心策略还正确吗？
+// 2. 能否按持续时间排序？为什么？
+// 3. 如果有多个活动的结束时间相同，怎么办？
+//
+// 举例分析：
+// 活动 A: (1, 3)
+// 活动 B: (2, 3)
+// 活动 C: (3, 4)
+//
+// 如果选 A，C 也能选 (1)
+// 如果选 B，C 也能选 (2)
+// 哪个选择更优？''',
+          description: '思考贪心选择策略的正确性。',
+        ),
+      ],
       keyPoints: [
         '贪心算法每步选择当前最优，不考虑对未来的影响',
         '贪心不一定能得到全局最优，需要证明贪心选择性质',
@@ -691,6 +738,65 @@ cost: 3 4 5 1 2
 能完成一圈的起点: 3''',
         ),
       ],
+      exercises: [
+        CodeExample(
+          title: '练习：实现哈夫曼编码',
+          code: '''// 实现哈夫曼编码算法
+// 给定字符频率，构建哈夫曼树并输出编码
+#include <iostream>
+#include <queue>
+#include <vector>
+#include <string>
+using namespace std;
+
+struct Node {
+    char ch;
+    int freq;
+    Node* left;
+    Node* right;
+    Node(char c, int f) : ch(c), freq(f), left(nullptr), right(nullptr) {}
+};
+
+struct Compare {
+    bool operator()(Node* a, Node* b) {
+        return a->freq > b->freq;
+    }
+};
+
+void buildHuffman(const vector<char>& chars, const vector<int>& freq) {
+    priority_queue<Node*, vector<Node*>, Compare> pq;
+    for (int i = 0; i < chars.size(); i++) {
+        pq.push(new Node(chars[i], freq[i]));
+    }
+    
+    // 补充代码：
+    // 1. 循环直到只剩一个节点
+    // 2. 取出两个最小频率的节点
+    // 3. 合并为一个新节点
+    // 4. 计算 WPL
+}
+
+int main() {
+    vector<char> chars = {'a', 'b', 'c', 'd', 'e'};
+    vector<int> freq = {45, 13, 12, 16, 9};
+    buildHuffman(chars, freq);
+    // 期望输出各字符的哈夫曼编码和 WPL
+}''',
+          description: '实现哈夫曼树的构建过程。',
+        ),
+        CodeExample(
+          title: '思考：合并区间问题',
+          code: '''// 给定若干区间，合并所有重叠的区间
+// 输入: [[1,3], [2,6], [8,10], [15,18]]
+// 输出: [[1,6], [8,10], [15,18]]
+//
+// 思考：
+// 1. 为什么先按起点排序是对的？
+// 2. 如果按终点排序，还能正确吗？
+// 3. 如果有区间 [1,5], [2,3], [4,7]，结果是什么？''',
+          description: '思考合并区间问题的贪心策略。',
+        ),
+      ],
       keyPoints: [
         '哈夫曼编码：频率最小的两个节点合并，最终 WPL（带权路径长度）最小',
         '哈夫曼编码是前缀码，任何字符编码都不是另一个的前缀',
@@ -989,6 +1095,68 @@ int main() {
 - 看到'最多'/'最少'/'最优' → 先想贪心
 - 看到'所有方案'/'最优方案' → 考虑 DP
 - 贪心做不出来 → 试试 DP''',
+        ),
+      ],
+      exercises: [
+        CodeExample(
+          title: '练习：分数背包的贪心实现',
+          code: '''// 实现分数背包的贪心算法
+// 每种物品可以取任意比例，求最大价值
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+struct Item {
+    int weight;
+    int value;
+    double ratio; // value/weight
+};
+
+double fractionalKnapsack(vector<Item>& items, int capacity) {
+    // 补充代码：
+    // 1. 计算每个物品的性价比
+    // 2. 按性价比从高到低排序
+    // 3. 依次选取物品直到容量满
+    // 4. 如果物品装不下，取部分
+}
+
+int main() {
+    vector<Item> items = {
+        {10, 60},  // A: 重量10, 价值60, 性价比6
+        {20, 100}, // B: 重量20, 价值100, 性价比5
+        {30, 120}  // C: 重量30, 价值120, 性价比4
+    };
+    cout << fractionalKnapsack(items, 50) << endl;
+    // 期望输出: 240 (选全部A(60) + 部分B(180)，价值240)
+}''',
+          description: '实现分数背包的贪心算法。',
+          output: '240',
+        ),
+        CodeExample(
+          title: '思考：0-1 背包为什么不能用贪心？',
+          code: '''// 0-1 背包问题为什么不能用贪心？
+//
+// 反例分析：
+// 背包容量 50，有 A、B、C 三种物品：
+// A: 重量 10, 价值 60, 性价比 6
+// B: 重量 20, 价值 100, 性价比 5
+// C: 重量 30, 价值 120, 性价比 4
+//
+// 按性价比贪心：
+// 1. 选 A（60）
+// 2. 选 B（100），剩余容量 20
+// 3. C 放不下
+// 总价值 = 160
+//
+// 最优解：
+// 选 B + C = 100 + 120 = 220 > 160
+//
+// 思考：
+// 1. 按重量排序呢？选最轻的
+// 2. 按价值排序呢？选最贵的
+// 3. 为什么按密度贪心会失败？''',
+          description: '理解 0-1 背包与分数背包的区别。',
         ),
       ],
       keyPoints: [
