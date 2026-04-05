@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../design/design_system.dart';
 import '../design/animations/fade_slide_transition.dart';
-import '../design/animations/pulse_animation.dart';
 import '../models/course_model.dart';
 import '../design/responsive.dart';
 import 'course_detail_page.dart';
@@ -1076,7 +1075,7 @@ class _FeaturedChapterChipState extends State<_FeaturedChapterChip> {
   }
 }
 
-/// Difficulty badge with pulse animation when hovered
+/// Difficulty badge with static highlight on hover (no pulse to avoid ticker issues)
 class _DifficultyBadgeWithPulse extends StatelessWidget {
   const _DifficultyBadgeWithPulse({
     required this.difficulty,
@@ -1088,13 +1087,14 @@ class _DifficultyBadgeWithPulse extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final badge = Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: difficulty.color.withValues(alpha: 0.15),
+        color: difficulty.color.withValues(alpha: isHovered ? 0.25 : 0.15),
         borderRadius: AppRadius.borderXs,
         border: Border.all(
-          color: difficulty.color.withValues(alpha: 0.3),
+          color: difficulty.color.withValues(alpha: isHovered ? 0.6 : 0.3),
         ),
       ),
       child: Text(
@@ -1102,17 +1102,6 @@ class _DifficultyBadgeWithPulse extends StatelessWidget {
         style: AppFonts.labelMedium(color: difficulty.color),
       ),
     );
-
-    if (isHovered) {
-      return PulseAnimation(
-        duration: const Duration(milliseconds: 1200),
-        scale: 1.1,
-        opacity: 0.6,
-        child: badge,
-      );
-    }
-
-    return badge;
   }
 }
 
