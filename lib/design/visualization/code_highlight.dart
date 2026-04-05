@@ -37,25 +37,26 @@ class CodeHighlight extends StatelessWidget {
     return Container(
       decoration: AppDecorations.codeBlock(),
       child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showLineNumbers) ...[
-                _LineNumbers(lines: lines, highlightedLine: highlightedLine),
-                const SizedBox(width: AppSpacing.md),
-              ],
-              Flexible(
-                child: _CodeLines(
+        scrollDirection: Axis.horizontal,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showLineNumbers) ...[
+                  _LineNumbers(lines: lines, highlightedLine: highlightedLine),
+                  const SizedBox(width: AppSpacing.md),
+                ],
+                _CodeLines(
                   lines: lines,
                   highlightedLine: highlightedLine,
                   language: language,
                   fontSize: fontSize,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -210,28 +211,17 @@ class _HighlightedLine extends StatelessWidget {
     };
 
     final spans = <TextSpan>[];
-    final words = line.split(RegExp(r'(\s+|(?=[{}();,]))'));
+    // 使用捕获组，\s+ 作为整体被捕获，空格不会丢失
+    final words = line.split(RegExp(r'(\s+|[{}();,.<>!&=|^~%?:])'));
 
-    // 提取行首缩进
-    String leadingWhitespace = '';
     for (final word in words) {
       if (word.isEmpty) continue;
-      // 找到第一个非空 token，检查它前面是否有空白被吃掉了
-      final trimmedLine = line.trimLeft();
-      final leadingSpacesCount = line.length - trimmedLine.length;
-      if (leadingSpacesCount > 0) {
-        leadingWhitespace = line.substring(0, leadingSpacesCount);
+
+      // 空格/空白——直接添加为普通文本（保留缩进和词间距）
+      if (RegExp(r'^\s+$').hasMatch(word)) {
+        spans.add(TextSpan(text: word));
+        continue;
       }
-      break;
-    }
-
-    bool leadingAdded = leadingWhitespace.isEmpty;
-    if (!leadingAdded) {
-      spans.add(TextSpan(text: leadingWhitespace));
-    }
-
-    for (final word in words) {
-      if (word.isEmpty) continue;
 
       // 注释
       if (word.startsWith('//')) {
@@ -278,7 +268,7 @@ class _HighlightedLine extends StatelessWidget {
         continue;
       }
 
-      // 普通标识符
+      // 普通标识符或符号
       spans.add(TextSpan(text: word));
     }
 
