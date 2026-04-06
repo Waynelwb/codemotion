@@ -211,20 +211,31 @@ class _HighlightedLine extends StatelessWidget {
     };
 
     final spans = <TextSpan>[];
-    // 使用捕获组，\s+ 作为整体被捕获，空格不会丢失
-    final words = line.split(RegExp(r'(\s+|[{}();,.<>!&=|^~%?:])'));
+    // 使用捕获组，保留空格；但 Dart split 可能产生尾随空字符串
+    final tokens = line.split(RegExp(r'(\s+|[{}();,.<>!&=|^~%?:])'));
 
-    for (final word in words) {
-      if (word.isEmpty) continue;
+    for (var i = 0; i < tokens.length; i++) {
+      final token = tokens[i];
+
+      // 跳过空字符串（Dart split 在捕获组时会产生尾随空元素）
+      // 但如果这不是最后一个元素，空字符串代表空格，需要保留
+      if (token.isEmpty) {
+        // 空字符串可能是：1) 尾随分隔符 2) 连续分隔符之间的空位
+        // 简化处理：对于非末尾的空字符串，添加一个空格
+        if (i < tokens.length - 1) {
+          spans.add(const TextSpan(text: ' '));
+        }
+        continue;
+      }
 
       // 空格/空白——直接添加为普通文本（保留缩进和词间距）
-      if (RegExp(r'^\s+$').hasMatch(word)) {
-        spans.add(TextSpan(text: word));
+      if (RegExp(r'^\s+$').hasMatch(token)) {
+        spans.add(TextSpan(text: token));
         continue;
       }
 
       // 注释
-      if (word.startsWith('//')) {
+      if (token.startsWith('//')) {
         spans.add(TextSpan(
           text: line.substring(line.indexOf('//')),
           style: _textStyle().copyWith(color: AppColors.syntaxComment),
@@ -233,43 +244,43 @@ class _HighlightedLine extends StatelessWidget {
       }
 
       // 字符串
-      if (word.startsWith('"') || word.startsWith("'")) {
+      if (token.startsWith('"') || token.startsWith("'")) {
         spans.add(TextSpan(
-          text: word,
+          text: token,
           style: _textStyle().copyWith(color: AppColors.syntaxString),
         ));
         continue;
       }
 
       // 数字
-      if (RegExp(r'^\d+\.?\d*[fFlL]?[uUlL]*$').hasMatch(word)) {
+      if (RegExp(r'^\d+\.?\d*[fFlL]?[uUlL]*$').hasMatch(token)) {
         spans.add(TextSpan(
-          text: word,
+          text: token,
           style: _textStyle().copyWith(color: AppColors.syntaxNumber),
         ));
         continue;
       }
 
       // 关键字
-      if (keywords.contains(word)) {
+      if (keywords.contains(token)) {
         spans.add(TextSpan(
-          text: word,
+          text: token,
           style: _textStyle().copyWith(color: AppColors.syntaxKeyword),
         ));
         continue;
       }
 
       // STL 类型和函数
-      if (stl.contains(word)) {
+      if (stl.contains(token)) {
         spans.add(TextSpan(
-          text: word,
+          text: token,
           style: _textStyle().copyWith(color: AppColors.syntaxType),
         ));
         continue;
       }
 
       // 普通标识符或符号
-      spans.add(TextSpan(text: word));
+      spans.add(TextSpan(text: token));
     }
 
     return spans;
